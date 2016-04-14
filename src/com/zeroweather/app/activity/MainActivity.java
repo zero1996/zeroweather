@@ -52,13 +52,10 @@ public class MainActivity extends Activity implements AMapLocationListener{
 		locationOption.setLocationMode(AMapLocationMode.Battery_Saving);
 		// 设置定位监听
 		locationClient.setLocationListener(this);
-				
 		//设置为单次定位
 		locationOption.setOnceLocation(true);
-		
 		// 设置是否需要显示地址信息
 		locationOption.setNeedAddress(false);
-		
 		// 设置定位参数
 		locationClient.setLocationOption(locationOption);
 		// 启动定位
@@ -90,6 +87,7 @@ public class MainActivity extends Activity implements AMapLocationListener{
 			case Utils.MSG_LOCATION_FINISH:
 				AMapLocation loc = (AMapLocation)msg.obj;
 				String result = Utils.getLocationStr(loc);
+				System.out.println(result);
 				tv.setText(result);
 				break;
 			case Utils.MSG_LOCATION_STOP:
