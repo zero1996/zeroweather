@@ -1,8 +1,5 @@
 package com.zeroweather.app.activity;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -13,20 +10,13 @@ import com.zeroweather.app.R;
 import com.zeroweather.app.util.Utils;
 
 import android.app.Activity;
-import android.content.Context;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
-import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class MainActivity extends Activity implements AMapLocationListener{
 	private TextView tv;
-	private Button btLocation;
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -43,22 +33,22 @@ public class MainActivity extends Activity implements AMapLocationListener{
 	}
 	
 	/**
-	 * Æô¶¯¸ßµÂÍøÂç¶¨Î»
+	 * ä½åŠŸè€—å®šä½æ¨¡å¼
 	 */
 	private void startLocation() {
 		locationClient = new AMapLocationClient(this.getApplicationContext());
 		locationOption = new AMapLocationClientOption();
-		// ÉèÖÃ¶¨Î»Ä£Ê½ÎªµÍ¹¦ºÄÄ£Ê½
-		locationOption.setLocationMode(AMapLocationMode.Battery_Saving);
-		// ÉèÖÃ¶¨Î»¼àÌı
-		locationClient.setLocationListener(this);
-		//ÉèÖÃÎªµ¥´Î¶¨Î»
+		// è®¾ç½®å®šä½æ¨¡å¼ä¸ºä½åŠŸè€—æ¨¡å¼
+				locationOption.setLocationMode(AMapLocationMode.Battery_Saving);
+				// è®¾ç½®å®šä½ç›‘å¬
+				locationClient.setLocationListener(this);
+				//è®¾ç½®ä¸ºä¸æ˜¯å•æ¬¡å®šä½
 		locationOption.setOnceLocation(true);
-		// ÉèÖÃÊÇ·ñĞèÒªÏÔÊ¾µØÖ·ĞÅÏ¢
-		locationOption.setNeedAddress(false);
-		// ÉèÖÃ¶¨Î»²ÎÊı
+		// è®¾ç½®æ˜¯å¦éœ€è¦æ˜¾ç¤ºåœ°å€ä¿¡æ¯
+		locationOption.setNeedAddress(true);
+		// è®¾ç½®å®šä½å‚æ•°
 		locationClient.setLocationOption(locationOption);
-		// Æô¶¯¶¨Î»
+		// å¯åŠ¨å®šä½
 		locationClient.startLocation();
 		mHandler.sendEmptyMessage(Utils.MSG_LOCATION_START);
 	}
@@ -68,8 +58,8 @@ public class MainActivity extends Activity implements AMapLocationListener{
 		super.onDestroy();
 		if (null != locationClient) {
 			/**
-			 * Èç¹ûAMapLocationClientÊÇÔÚµ±Ç°ActivityÊµÀı»¯µÄ£¬
-			 * ÔÚActivityµÄonDestroyÖĞÒ»¶¨ÒªÖ´ĞĞAMapLocationClientµÄonDestroy
+			 * å¦‚æœAMapLocationClientæ˜¯åœ¨å½“å‰Activityå®ä¾‹åŒ–çš„ï¼Œ
+			 * åœ¨Activityçš„onDestroyä¸­ä¸€å®šè¦æ‰§è¡ŒAMapLocationClientçš„onDestroy
 			 */
 			locationClient.onDestroy();
 			locationClient = null;
@@ -81,9 +71,9 @@ public class MainActivity extends Activity implements AMapLocationListener{
 		public void dispatchMessage(android.os.Message msg) {
 			switch (msg.what) {
 			case Utils.MSG_LOCATION_START:
-				tv.setText("ÕıÔÚ¶¨Î»...");
+				tv.setText("æ­£åœ¨å®šä½...");
 				break;
-			//¶¨Î»Íê³É
+				//å®šä½å®Œæˆ
 			case Utils.MSG_LOCATION_FINISH:
 				AMapLocation loc = (AMapLocation)msg.obj;
 				String result = Utils.getLocationStr(loc);
@@ -91,7 +81,7 @@ public class MainActivity extends Activity implements AMapLocationListener{
 				tv.setText(result);
 				break;
 			case Utils.MSG_LOCATION_STOP:
-				tv.setText("¶¨Î»Í£Ö¹");
+				tv.setText("å®šä½åœæ­¢");
 				break;
 			default:
 				break;
@@ -99,15 +89,15 @@ public class MainActivity extends Activity implements AMapLocationListener{
 		};
 	};
 
-	// ¶¨Î»¼àÌı
-	@Override
-	public void onLocationChanged(AMapLocation loc) {
-		if (null != loc) {
-			Message msg = mHandler.obtainMessage();
-			msg.obj = loc;
-			msg.what = Utils.MSG_LOCATION_FINISH;
-			mHandler.sendMessage(msg);
+	// å®šä½ç›‘å¬
+		@Override
+		public void onLocationChanged(AMapLocation loc) {
+			if (null != loc) {
+				Message msg = mHandler.obtainMessage();
+				msg.obj = loc;
+				msg.what = Utils.MSG_LOCATION_FINISH;
+				mHandler.sendMessage(msg);
+			}
 		}
-	}
 
 }

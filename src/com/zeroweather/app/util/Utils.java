@@ -6,31 +6,31 @@ package com.zeroweather.app.util;
 import com.amap.api.location.AMapLocation;
 
 /**
- * ¸¨Öú¹¤¾ßÀà
- * @´´½¨Ê±¼ä£º 2015Äê11ÔÂ24ÈÕ ÉÏÎç11:46:50
- * @ÏîÄ¿Ãû³Æ£º AMapLocationDemo2.x
+ * è¾…åŠ©å·¥å…·ç±»
+ * @åˆ›å»ºæ—¶é—´ï¼š 2015å¹´11æœˆ24æ—¥ ä¸Šåˆ11:46:50
+ * @é¡¹ç›®åç§°ï¼š AMapLocationDemo2.x
  * @author hongming.wang
- * @ÎÄ¼şÃû³Æ: Utils.java
- * @ÀàĞÍÃû³Æ: Utils
+ * @æ–‡ä»¶åç§°: Utils.java
+ * @ç±»å‹åç§°: Utils
  */
 public class Utils {
 	/**
-	 *  ¿ªÊ¼¶¨Î»
+	 *  å¼€å§‹å®šä½
 	 */
 	public final static int MSG_LOCATION_START = 0;
 	/**
-	 * ¶¨Î»Íê³É
+	 * å®šä½å®Œæˆ
 	 */
 	public final static int MSG_LOCATION_FINISH = 1;
 	/**
-	 * Í£Ö¹¶¨Î»
+	 * åœæ­¢å®šä½
 	 */
 	public final static int MSG_LOCATION_STOP= 2;
 	
 	public final static String KEY_URL = "URL";
 	public final static String URL_H5LOCATION = "file:///android_asset/location.html";
 	/**
-	 * ¸ù¾İ¶¨Î»½á¹û·µ»Ø¶¨Î»ĞÅÏ¢µÄ×Ö·û´®
+	 * æ ¹æ®å®šä½ç»“æœè¿”å›å®šä½ä¿¡æ¯çš„å­—ç¬¦ä¸²
 	 * @param loc
 	 * @return
 	 */
@@ -39,40 +39,40 @@ public class Utils {
 			return null;
 		}
 		StringBuffer sb = new StringBuffer();
-		//errCodeµÈÓÚ0´ú±í¶¨Î»³É¹¦£¬ÆäËûµÄÎª¶¨Î»Ê§°Ü£¬¾ßÌåµÄ¿ÉÒÔ²ÎÕÕ¹ÙÍø¶¨Î»´íÎóÂëËµÃ÷
+		//errCodeç­‰äº0ä»£è¡¨å®šä½æˆåŠŸï¼Œå…¶ä»–çš„ä¸ºå®šä½å¤±è´¥ï¼Œå…·ä½“çš„å¯ä»¥å‚ç…§å®˜ç½‘å®šä½é”™è¯¯ç è¯´æ˜
 		if(location.getErrorCode() == 0){
-//			sb.append("¶¨Î»³É¹¦" + "\n");
-//			sb.append("¶¨Î»ÀàĞÍ: " + location.getLocationType() + "\n");
-			sb.append(location.getLongitude());
-			sb.append(","+location.getLatitude());
-//			sb.append("¾«    ¶È    : " + location.getAccuracy() + "Ã×" + "\n");
-//			sb.append("Ìá¹©Õß    : " + location.getProvider() + "\n");
+			sb.append("å®šä½æˆåŠŸ" + "\n");
+			sb.append("å®šä½ç±»å‹: " + location.getLocationType() + "\n");
+			sb.append("ç»    åº¦    : " + location.getLongitude() + "\n");
+			sb.append("çº¬    åº¦    : " + location.getLatitude() + "\n");
+			sb.append("ç²¾    åº¦    : " + location.getAccuracy() + "ç±³" + "\n");
+			sb.append("æä¾›è€…    : " + location.getProvider() + "\n");
 			
 			if (location.getProvider().equalsIgnoreCase(
 					android.location.LocationManager.GPS_PROVIDER)) {
-				// ÒÔÏÂĞÅÏ¢Ö»ÓĞÌá¹©ÕßÊÇGPSÊ±²Å»áÓĞ
-//				sb.append("ËÙ    ¶È    : " + location.getSpeed() + "Ã×/Ãë" + "\n");
-//				sb.append("½Ç    ¶È    : " + location.getBearing() + "\n");
-//				// »ñÈ¡µ±Ç°Ìá¹©¶¨Î»·şÎñµÄÎÀĞÇ¸öÊı
-//				sb.append("ĞÇ    Êı    : "
-//						+ location.getSatellites() + "\n");
+				// ä»¥ä¸‹ä¿¡æ¯åªæœ‰æä¾›è€…æ˜¯GPSæ—¶æ‰ä¼šæœ‰
+				sb.append("é€Ÿ    åº¦    : " + location.getSpeed() + "ç±³/ç§’" + "\n");
+				sb.append("è§’    åº¦    : " + location.getBearing() + "\n");
+				// è·å–å½“å‰æä¾›å®šä½æœåŠ¡çš„å«æ˜Ÿä¸ªæ•°
+				sb.append("æ˜Ÿ    æ•°    : "
+						+ location.getSatellites() + "\n");
 			} else {
-				// Ìá¹©ÕßÊÇGPSÊ±ÊÇÃ»ÓĞÒÔÏÂĞÅÏ¢µÄ
-//				sb.append("¹ú    ¼Ò    : " + location.getCountry() + "\n");
-//				sb.append("Ê¡            : " + location.getProvince() + "\n");
-//				sb.append("ÊĞ            : " + location.getCity() + "\n");
-//				sb.append("³ÇÊĞ±àÂë : " + location.getCityCode() + "\n");
-//				sb.append("Çø            : " + location.getDistrict() + "\n");
-//				sb.append("ÇøÓò Âë   : " + location.getAdCode() + "\n");
-//				sb.append("µØ    Ö·    : " + location.getAddress() + "\n");
-//				sb.append("ĞËÈ¤µã    : " + location.getPoiName() + "\n");
+				// æä¾›è€…æ˜¯GPSæ—¶æ˜¯æ²¡æœ‰ä»¥ä¸‹ä¿¡æ¯çš„
+				sb.append("å›½    å®¶    : " + location.getCountry() + "\n");
+				sb.append("çœ            : " + location.getProvince() + "\n");
+				sb.append("å¸‚            : " + location.getCity() + "\n");
+				sb.append("åŸå¸‚ç¼–ç  : " + location.getCityCode() + "\n");
+				sb.append("åŒº            : " + location.getDistrict() + "\n");
+				sb.append("åŒºåŸŸ ç    : " + location.getAdCode() + "\n");
+				sb.append("åœ°    å€    : " + location.getAddress() + "\n");
+				sb.append("å…´è¶£ç‚¹    : " + location.getPoiName() + "\n");
 			}
 		} else {
-			//¶¨Î»Ê§°Ü
-			sb.append("¶¨Î»Ê§°Ü" + "\n");
-			sb.append("´íÎóÂë:" + location.getErrorCode() + "\n");
-			sb.append("´íÎóĞÅÏ¢:" + location.getErrorInfo() + "\n");
-			sb.append("´íÎóÃèÊö:" + location.getLocationDetail() + "\n");
+			//å®šä½å¤±è´¥
+			sb.append("å®šä½å¤±è´¥" + "\n");
+			sb.append("é”™è¯¯ç :" + location.getErrorCode() + "\n");
+			sb.append("é”™è¯¯ä¿¡æ¯:" + location.getErrorInfo() + "\n");
+			sb.append("é”™è¯¯æè¿°:" + location.getLocationDetail() + "\n");
 		}
 		return sb.toString();
 	}
