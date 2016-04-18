@@ -149,4 +149,27 @@ public class ZeroWeatherDB {
 
 	}
 
+	/**
+	 * 查询城市代码
+	 * @param city 城市名
+	 * @param province 省份名
+	 * @return 城市代码
+	 */
+	public String queryCityCode(String city, String province) {
+		String code = "";
+		Cursor cursor = db.query("CityDetail", null, "city = ?",
+				new String[] { city }, null, null, null);
+		if (cursor.moveToFirst()) {
+			String cityName = cursor.getString(cursor.getColumnIndex("city"));
+			String provinceName = cursor.getString(cursor
+					.getColumnIndex("province"));
+			//城市和省份匹配
+			if (cityName.equals(city) && provinceName.equals(province)) {
+				code = cursor.getString(cursor.getColumnIndex("code"));
+			}
+
+		}
+		return code;
+	}
+
 }

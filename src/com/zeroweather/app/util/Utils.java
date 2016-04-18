@@ -88,4 +88,39 @@ public class Utils {
 		}
 		return map;
 	}
+	
+	/**
+	 * 解析定位的区域名
+	 */
+	public static String parseDistrictName(String district){
+		String districtName = district;
+		char tag = districtName.charAt(districtName.length()-1);
+		if("区".equals(tag+"")){
+			districtName = districtName.substring(0, districtName.length() - 1);
+		}
+		return districtName;
+	}
+	/**
+	 * 解析定位的城市名
+	 */
+	public static String parseCityName(String city){
+		String cityName = city;
+		char tag = cityName.charAt(cityName.length()-1);
+		if("市".equals(tag+"")){
+			cityName = cityName.substring(0, cityName.length() - 1);
+		}
+		return cityName;
+	}
+	
+	/**
+	 * 解析定位的省份名
+	 */
+	public static String parseProvinceName(String province){
+		String provinceName = province;
+		char tag = provinceName.charAt(provinceName.length()-1);
+		if("省".equals(tag+"")){
+			provinceName = provinceName.substring(0, provinceName.length() - 1);
+		}
+		return provinceName;
+	}
 }
