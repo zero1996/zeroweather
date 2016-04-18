@@ -6,13 +6,11 @@ import android.database.sqlite.SQLiteDatabase.CursorFactory;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class ZeroWeatherOpenHelper extends SQLiteOpenHelper {
-	
-	//Province±í½¨±íÓï¾ä
-	public static final String CREATE_PROVINCE = "create table Province (id integer primary key autoincrement,province_name text,province_code text)";
-	//City±í½¨±íÓï¾ä
-	public static final String CREATE_CITY = "create table Province (id integer primary key autoincrement,city_name text,city_code text,province_id integer)";
-	//County±í½¨±íÓï¾ä
-	public static final String CREATE_COUNTY = "create table Province (id integer primary key autoincrement,county_name text,county_code text,city_id integer)";
+
+//	public static final String CREATE_PROVINCE = "create table Province (id integer primary key autoincrement,province_name text,province_code text)";
+//	public static final String CREATE_CITY = "create table City (id integer primary key autoincrement,city_name text,city_code text,province_id integer)";
+//	public static final String CREATE_COUNTY = "create table COUNTY (id integer primary key autoincrement,county_name text,county_code text,city_id integer)";
+	public static final String CREATE_CITY_DETAIL = "create table CityDetail (id integer primary key autoincrement,country text,province text,city,code text)";
 
 	public ZeroWeatherOpenHelper(Context context, String name,
 			CursorFactory factory, int version) {
@@ -21,9 +19,10 @@ public class ZeroWeatherOpenHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase db) {
-		db.execSQL(CREATE_PROVINCE);//´´½¨Province±í
-		db.execSQL(CREATE_CITY);//´´½¨City±í
-		db.execSQL(CREATE_COUNTY);//´´½¨County±í
+//		db.execSQL(CREATE_PROVINCE);// ï¿½ï¿½ï¿½ï¿½Provinceï¿½ï¿½
+//		db.execSQL(CREATE_CITY);// ï¿½ï¿½ï¿½ï¿½Cityï¿½ï¿½
+//		db.execSQL(CREATE_COUNTY);// ï¿½ï¿½ï¿½ï¿½Countyï¿½ï¿½
+		db.execSQL(CREATE_CITY_DETAIL);
 	}
 
 	@Override
