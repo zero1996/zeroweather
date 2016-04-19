@@ -1,35 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/weather"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="20dp"
-    android:paddingRight="20dp"
-    android:paddingTop="20dp" >
-    
+    android:padding="20dp"
+    >
+
     <include layout="@layout/layout_top" />
 
     <ScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none"
-       >
+        android:scrollbars="none" >
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" >
 
-        <include layout="@layout/now_weather"
-                />
+            <include layout="@layout/now_weather" />
 
             <TextView
-                android:layout_marginTop="100dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="gkdjsgljklgjlk"
-                />
+                android:layout_marginTop="100dp"
+                android:text="gkdjsgljklgjlk" />
         </LinearLayout>
     </ScrollView>
 

@@ -54,6 +54,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private TextView todayTmpScope;// 显示今天温度范围
 	private LinearLayout nowWeatherLayout;
 	private LinearLayout topWeatherLayout;
+	private LinearLayout weatherLayout;
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -82,17 +83,20 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		todayTmpScope = (TextView) findViewById(R.id.today_tmp_scope);
 		nowWeatherLayout = (LinearLayout) findViewById(R.id.now_weather);
 		topWeatherLayout = (LinearLayout) findViewById(R.id.top_weather);
+		weatherLayout = (LinearLayout) findViewById(R.id.weather);
 		
 		//获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
 		int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
 		nowWeatherLayout.measure(w, h);
 		topWeatherLayout.measure(w, h);
+		weatherLayout.measure(w, h);
 		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
 		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
+		int padding = weatherLayout.getPaddingTop();
 		//设置margin
 		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout.getLayoutParams();
-		params.topMargin = getScreenHeight()-nowWeatherHeight*2;
+		params.topMargin = getScreenHeight()-nowWeatherHeight-topWeatherHeight-padding*4;
 		
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
 	}
