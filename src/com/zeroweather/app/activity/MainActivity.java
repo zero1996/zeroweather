@@ -36,6 +36,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
@@ -55,6 +56,8 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private LinearLayout nowWeatherLayout;
 	private LinearLayout topWeatherLayout;
 	private LinearLayout weatherLayout;
+	private ImageView locationIV;
+	private ImageView moreIV;
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -66,7 +69,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
 		initView();
-		// 第一次进入程序，从服务器加载可查询城市并保存至数据库。否则跳过此过程
+		// 第一次进入程序，服务器加载可查询城市并保存至数据库。否则跳过此过程
 		getCityList();
 
 	}
@@ -84,6 +87,8 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		nowWeatherLayout = (LinearLayout) findViewById(R.id.now_weather);
 		topWeatherLayout = (LinearLayout) findViewById(R.id.top_weather);
 		weatherLayout = (LinearLayout) findViewById(R.id.weather);
+		locationIV = (ImageView) findViewById(R.id.location);
+		moreIV = (ImageView) findViewById(R.id.more);
 		
 		//获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
@@ -198,7 +203,9 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					}
 					// 获取天气
 					getWeather(code);
+					locationIV.setImageResource(R.drawable.location_on);
 				} else {
+					locationIV.setImageResource(R.drawable.location_off);
 					Toast.makeText(MainActivity.this, "定位失败",
 							Toast.LENGTH_SHORT).show();
 				}
