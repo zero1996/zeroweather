@@ -3,10 +3,18 @@
  */
 package com.zeroweather.app.util;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xmlpull.v1.XmlSerializer;
+
+import android.util.Xml;
+
 import com.amap.api.location.AMapLocation;
+import com.zeroweather.app.model.CityDetail;
 
 /**
  * 辅助工具类
@@ -123,4 +131,6 @@ public class Utils {
 		}
 		return provinceName;
 	}
+	
+	
 }

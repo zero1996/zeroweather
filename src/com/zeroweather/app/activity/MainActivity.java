@@ -1,5 +1,11 @@
 package com.zeroweather.app.activity;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +13,8 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlSerializer;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -32,6 +40,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.Xml;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -70,7 +79,10 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		setContentView(R.layout.activity_main);
 		initView();
 		// 第一次进入程序，服务器加载可查询城市并保存至数据库。否则跳过此过程
-		getCityList();
+		// getCityList();
+		Message msg = new Message();
+		msg.what = Utils.MSG_LOAD_CITY_DETAIL;
+		mHandler.sendMessage(msg);
 
 	}
 
@@ -89,29 +101,35 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		weatherLayout = (LinearLayout) findViewById(R.id.weather);
 		locationIV = (ImageView) findViewById(R.id.location);
 		moreIV = (ImageView) findViewById(R.id.more);
-		
-		//获取控件高度
-		int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-		int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+
+		// 获取控件高度
+		int w = View.MeasureSpec.makeMeasureSpec(0,
+				View.MeasureSpec.UNSPECIFIED);
+		int h = View.MeasureSpec.makeMeasureSpec(0,
+				View.MeasureSpec.UNSPECIFIED);
 		nowWeatherLayout.measure(w, h);
 		topWeatherLayout.measure(w, h);
 		weatherLayout.measure(w, h);
 		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
 		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
 		int padding = weatherLayout.getPaddingTop();
-		//设置margin
-		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout.getLayoutParams();
-		params.topMargin = getScreenHeight()-nowWeatherHeight-topWeatherHeight-padding*4;
-		
+		// 设置margin
+		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
+				.getLayoutParams();
+		params.topMargin = getScreenHeight() - nowWeatherHeight
+				- topWeatherHeight - padding * 4;
+
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
 	}
-	
+
 	/**
 	 * 获取屏幕高度
+	 * 
 	 * @return 屏幕高度
 	 */
-	private int getScreenHeight(){
-		WindowManager wm = (WindowManager) this.getSystemService(Context.WINDOW_SERVICE);
+	private int getScreenHeight() {
+		WindowManager wm = (WindowManager) this
+				.getSystemService(Context.WINDOW_SERVICE);
 		DisplayMetrics outMetrics = new DisplayMetrics();
 		wm.getDefaultDisplay().getMetrics(outMetrics);
 		return outMetrics.heightPixels;
@@ -195,14 +213,30 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					String city = Utils.parseCityName(result.get("city"));
 					String province = Utils.parseProvinceName(result
 							.get("province"));
+					// String code = zeroWeatherDB.queryCityCode(district,
+					// province);
+					// if ("".equals(code)) {
+					// code = zeroWeatherDB.queryCityCode(city, province);
+					// }
 					// 先通过区域名查询城市代码，查询不到则通过城市名查询。
-					String code = zeroWeatherDB.queryCityCode(district,
-							province);
-					if ("".equals(code)) {
-						code = zeroWeatherDB.queryCityCode(city, province);
+					CityDetail cityDetail;
+					InputStream is;
+					try {
+						is = MainActivity.this.getAssets().open("citylist.xml");
+//						cityDetail = parse(is, district, province);
+//						if (cityDetail == null) {
+//							cityDetail = parse(is, city, province);
+//						}
+						cityDetail = parse(is,"长沙","湖南");
+						// 获取天气
+						if (cityDetail != null) {
+							getWeather(cityDetail.getId());
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					// 获取天气
-					getWeather(code);
 					locationIV.setImageResource(R.drawable.location_on);
 				} else {
 					locationIV.setImageResource(R.drawable.location_off);
@@ -280,6 +314,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	 * 解析城市列表json,并保存至数据库
 	 */
 	public void parseCitylistJson(String response) {
+		List<CityDetail> list = new ArrayList<CityDetail>();
 		try {
 			JSONObject jsonObj = new JSONObject(response);
 			if (jsonObj.has("city_info")) {
@@ -292,11 +327,14 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					cityDetail.setCity(detail.getString("city"));
 					cityDetail.setId(detail.getString("id"));
 					zeroWeatherDB.saveCityDetail(cityDetail);
+					list.add(cityDetail);
 				}
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
+		// 保存至xml
+		writeToXml(WriteToString(list));
 	}
 
 	/**
@@ -340,6 +378,130 @@ public class MainActivity extends Activity implements AMapLocationListener {
 			e.printStackTrace();
 		}
 		return weather;
+	}
+
+	public String WriteToString(List<CityDetail> cityDetails) {
+		XmlSerializer serializer = Xml.newSerializer();
+		StringWriter writer = new StringWriter();
+		try {
+			serializer.setOutput(writer);
+			serializer.startDocument("UTF-8", true);
+
+			for (int i = 0; i < cityDetails.size(); i++) {
+				CityDetail cityDetail = cityDetails.get(i);
+
+				serializer.startTag("", "cityDetail");
+
+				serializer.startTag("", "country");
+				serializer.text(cityDetail.getCountry());
+				serializer.endTag("", "country");
+
+				serializer.startTag("", "province");
+				serializer.text(cityDetail.getProvince());
+				serializer.endTag("", "province");
+
+				serializer.startTag("", "city");
+				serializer.text(cityDetail.getCity());
+				serializer.endTag("", "city");
+
+				serializer.startTag("", "id");
+				serializer.text(cityDetail.getId());
+				serializer.endTag("", "id");
+
+				serializer.endTag("", "cityDetail");
+			}
+			serializer.endDocument();
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return writer.toString();
+	}
+
+	private boolean writeToXml(String str) {
+		Log.i("---------------", str);
+		try {
+			OutputStream out = openFileOutput("citys.xml", MODE_PRIVATE);
+			OutputStreamWriter outWriter = new OutputStreamWriter(out);
+			outWriter.write(str);
+			outWriter.close();
+			out.close();
+			return true;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public CityDetail parse(InputStream is, String cityName, String provinceName)
+			throws Exception {
+		String id = null;
+		CityDetail cityDetail = null;
+		XmlPullParser xpp = Xml.newPullParser();
+		// 设置输入流 并指明编码方式
+		xpp.setInput(is, "UTF-8");
+		// 产生第一个事件
+		int eventType = xpp.getEventType();
+
+		boolean flag = false;
+
+		while (eventType != XmlPullParser.END_DOCUMENT) {
+			switch (eventType) {
+			// 判断当前事件是否为文档开始事件
+			case XmlPullParser.START_DOCUMENT:
+
+				break;
+			// 判断当前事件是否为标签元素开始事件
+			case XmlPullParser.START_TAG:
+				if (xpp.getName().equals("cityDetail")) {
+					cityDetail = new CityDetail();
+				} else if (xpp.getName().equals("city")) {
+					eventType = xpp.next();// 让解析器指向city属性的值
+					if (xpp.getText().trim().equals(cityName)) {
+						flag = true;
+						String xml_city = xpp.getText();
+						cityDetail.setCity(xml_city);
+					}
+				} else if (xpp.getName().equals("country")) {
+					eventType = xpp.next();// 让解析器指向country属性的值
+					if (flag) {
+						cityDetail.setCountry(xpp.getText().trim());
+					}
+				} else if (xpp.getName().equals("province")) {
+					eventType = xpp.next();// 让解析器指向province属性的值
+					if (xpp.getText().trim().equals(provinceName)) {
+						if (flag) {
+							cityDetail.setProvince(xpp.getText().trim());
+						}
+						String xml_city = xpp.getText();
+					}
+				} else if (xpp.getName().equals("id")) {
+					eventType = xpp.next();// 让解析器指向id属性的值
+					if (flag) {
+						cityDetail.setId(xpp.getText().trim());
+						return cityDetail;
+					}
+				}
+				break;
+
+			// 判断当前事件是否为标签结束事件
+			case XmlPullParser.END_TAG:
+				if (xpp.getName().equals("cityDetail")) {
+					cityDetail = null;
+				}
+				break;
+			}
+			// 进入下一个元素并触发相应事件
+			eventType = xpp.next();
+		}
+		return cityDetail;
 	}
 
 }
