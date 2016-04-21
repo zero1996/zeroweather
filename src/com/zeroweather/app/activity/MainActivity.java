@@ -78,8 +78,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
 		initView();
-		// 第一次进入程序，服务器加载可查询城市并保存至数据库。否则跳过此过程
-		// getCityList();
+		
 		Message msg = new Message();
 		msg.what = Utils.MSG_LOAD_CITY_DETAIL;
 		mHandler.sendMessage(msg);
@@ -203,7 +202,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 			case Utils.MSG_LOCATION_START:
 				// locatiionCityTV.setText("正在定位...");
 				break;
-			// 定位完成
+				// 定位完成
 			case Utils.MSG_LOCATION_FINISH:
 				AMapLocation loc = (AMapLocation) msg.obj;
 				Map<String, String> result = Utils.getLocationStr(loc);
@@ -219,15 +218,15 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					// code = zeroWeatherDB.queryCityCode(city, province);
 					// }
 					// 先通过区域名查询城市代码，查询不到则通过城市名查询。
-					CityDetail cityDetail;
+					CityDetail cityDetail = null;
 					InputStream is;
 					try {
 						is = MainActivity.this.getAssets().open("citylist.xml");
-//						cityDetail = parse(is, district, province);
-//						if (cityDetail == null) {
-//							cityDetail = parse(is, city, province);
-//						}
-						cityDetail = parse(is,"长沙","湖南");
+						cityDetail = parse(is, district, province);
+						if (cityDetail == null) {
+							is = MainActivity.this.getAssets().open("citylist.xml");
+							cityDetail = parse(is, city, province);
+						}
 						// 获取天气
 						if (cityDetail != null) {
 							getWeather(cityDetail.getId());
@@ -278,35 +277,35 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		para.put("cityid", cityCode);
 		ApiStoreSDK.execute("http://apis.baidu.com/heweather/weather/free",
 				ApiStoreSDK.GET, para, new ApiCallBack() {
-					@Override
-					public void onSuccess(int status, String responseString) {
-						Log.i("sdkdemo", "onSuccess");
-						Weather weather = parseWeatherJson(responseString);
-						if (weather != null) {
-							locatiionCityTV.setText(weather.getCity());
-							dateTV.setText(weather.getDate());
-							nowTmpTV.setText(weather.getNowTemp() + "°");
-							nowCondTxtTV.setText(weather.getNowCondTxt());
-							todayTmpScope.setText(weather.getTodayTempMax()
-									+ "°/" + weather.getTodayTempMin() + "℃");
+			@Override
+			public void onSuccess(int status, String responseString) {
+				Log.i("sdkdemo", "onSuccess");
+				Weather weather = parseWeatherJson(responseString);
+				if (weather != null) {
+					locatiionCityTV.setText(weather.getCity());
+					dateTV.setText(weather.getDate());
+					nowTmpTV.setText(weather.getNowTemp() + "°");
+					nowCondTxtTV.setText(weather.getNowCondTxt());
+					todayTmpScope.setText(weather.getTodayTempMax()
+							+ "°/" + weather.getTodayTempMin() + "℃");
 
-						}
-					}
+				}
+			}
 
-					@Override
-					public void onComplete() {
-						Log.i("sdkdemo", "onComplete");
-					}
+			@Override
+			public void onComplete() {
+				Log.i("sdkdemo", "onComplete");
+			}
 
-					@Override
-					public void onError(int status, String responseString,
-							Exception e) {
-						Log.i("sdkdemo", "onError, status: " + status);
-						Log.i("sdkdemo",
-								"errMsg: " + (e == null ? "" : e.getMessage()));
-					}
+			@Override
+			public void onError(int status, String responseString,
+					Exception e) {
+				Log.i("sdkdemo", "onError, status: " + status);
+				Log.i("sdkdemo",
+						"errMsg: " + (e == null ? "" : e.getMessage()));
+			}
 
-				});
+		});
 
 	}
 
@@ -442,7 +441,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 	public CityDetail parse(InputStream is, String cityName, String provinceName)
 			throws Exception {
-		String id = null;
 		CityDetail cityDetail = null;
 		XmlPullParser xpp = Xml.newPullParser();
 		// 设置输入流 并指明编码方式
@@ -458,16 +456,16 @@ public class MainActivity extends Activity implements AMapLocationListener {
 			case XmlPullParser.START_DOCUMENT:
 
 				break;
-			// 判断当前事件是否为标签元素开始事件
+				// 判断当前事件是否为标签元素开始事件
 			case XmlPullParser.START_TAG:
 				if (xpp.getName().equals("cityDetail")) {
-					cityDetail = new CityDetail();
+
 				} else if (xpp.getName().equals("city")) {
 					eventType = xpp.next();// 让解析器指向city属性的值
 					if (xpp.getText().trim().equals(cityName)) {
+						cityDetail = new CityDetail();
 						flag = true;
-						String xml_city = xpp.getText();
-						cityDetail.setCity(xml_city);
+						cityDetail.setCity(xpp.getText());
 					}
 				} else if (xpp.getName().equals("country")) {
 					eventType = xpp.next();// 让解析器指向country属性的值
@@ -480,7 +478,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 						if (flag) {
 							cityDetail.setProvince(xpp.getText().trim());
 						}
-						String xml_city = xpp.getText();
 					}
 				} else if (xpp.getName().equals("id")) {
 					eventType = xpp.next();// 让解析器指向id属性的值
@@ -491,7 +488,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 				}
 				break;
 
-			// 判断当前事件是否为标签结束事件
+				// 判断当前事件是否为标签结束事件
 			case XmlPullParser.END_TAG:
 				if (xpp.getName().equals("cityDetail")) {
 					cityDetail = null;
