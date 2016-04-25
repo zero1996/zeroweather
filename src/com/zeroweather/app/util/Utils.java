@@ -6,6 +6,11 @@ package com.zeroweather.app.util;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -130,6 +135,30 @@ public class Utils {
 			provinceName = provinceName.substring(0, provinceName.length() - 1);
 		}
 		return provinceName;
+	}
+	
+	/**
+	 * 根据日期返回周几
+	 * @param time 日期
+	 * @return 周几
+	 * @throws ParseException
+	 */
+	public static String dayForWeek(String time) throws ParseException{
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = format.parse(time);
+		 String[] weeks = {"周日","周一","周二","周三","周四","周五","周六"};  
+	        Calendar cal = Calendar.getInstance();  
+	        cal.setTime(date);  
+	        int week_index = cal.get(Calendar.DAY_OF_WEEK) - 1;  
+	        if(week_index<0){  
+	            week_index = 0;  
+	        }   
+	        return weeks[week_index];
+	}
+	
+	public static String splitDate(String time){
+		String [] date = time.split("-");
+		return date[1]+"/"+date[2];
 	}
 	
 	

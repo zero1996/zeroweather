@@ -6,7 +6,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -26,12 +28,15 @@ import com.baidu.apistore.sdk.ApiStoreSDK;
 import com.baidu.apistore.sdk.network.Parameters;
 import com.zeroweather.app.R;
 import com.zeroweather.app.application.App;
+import com.zeroweather.app.apt.DailyForecastAdapter;
 import com.zeroweather.app.db.ZeroWeatherDB;
 import com.zeroweather.app.model.CityDetail;
+import com.zeroweather.app.model.DailyForecast;
 import com.zeroweather.app.model.Weather;
 import com.zeroweather.app.util.NetUtil;
 import com.zeroweather.app.util.NetUtil.HttpCallbackListener;
 import com.zeroweather.app.util.Utils;
+import com.zeroweather.app.view.DailyForecastGridView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -57,6 +62,8 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements AMapLocationListener {
 	private ZeroWeatherDB zeroWeatherDB;
 	private App mApp;
+	private List<DailyForecast> dailyForecastList;//每日天气集合
+	private Weather weather;//基础天气实体类
 	private TextView locatiionCityTV;// 显示城市
 	private TextView dateTV;// 显示日期
 	private TextView nowTmpTV;// 显示当前温度
@@ -67,6 +74,9 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private LinearLayout weatherLayout;
 	private ImageView locationIV;
 	private ImageView moreIV;
+	private DailyForecastGridView dfGridView;//一周天气GridView
+	private DailyForecastAdapter dfApt;//一周天气适配器
+	
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -100,7 +110,14 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		weatherLayout = (LinearLayout) findViewById(R.id.weather);
 		locationIV = (ImageView) findViewById(R.id.location);
 		moreIV = (ImageView) findViewById(R.id.more);
-
+		
+		dailyForecastList = new ArrayList<DailyForecast>();
+		
+		//初始化一周天气GridView
+		dfGridView = (DailyForecastGridView) findViewById(R.id.daily_forecast_grid_view);
+		dfApt = new DailyForecastAdapter(this, R.layout.item_dailyforecast, dailyForecastList);
+		dfGridView.setAdapter(dfApt);
+		
 		// 获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0,
 				View.MeasureSpec.UNSPECIFIED);
@@ -212,11 +229,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					String city = Utils.parseCityName(result.get("city"));
 					String province = Utils.parseProvinceName(result
 							.get("province"));
-					// String code = zeroWeatherDB.queryCityCode(district,
-					// province);
-					// if ("".equals(code)) {
-					// code = zeroWeatherDB.queryCityCode(city, province);
-					// }
 					// 先通过区域名查询城市代码，查询不到则通过城市名查询。
 					CityDetail cityDetail = null;
 					InputStream is;
@@ -280,7 +292,9 @@ public class MainActivity extends Activity implements AMapLocationListener {
 			@Override
 			public void onSuccess(int status, String responseString) {
 				Log.i("sdkdemo", "onSuccess");
-				Weather weather = parseWeatherJson(responseString);
+				//解析JSON
+				parseWeatherJson(responseString);
+				//刷新界面基础天气信息
 				if (weather != null) {
 					locatiionCityTV.setText(weather.getCity());
 					dateTV.setText(weather.getDate());
@@ -289,6 +303,10 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					todayTmpScope.setText(weather.getTodayTempMax()
 							+ "°/" + weather.getTodayTempMin() + "℃");
 
+				}
+				//刷新一周天气数据
+				if(dailyForecastList != null){
+					dfApt.notifyDataSetChanged();
 				}
 			}
 
@@ -337,13 +355,13 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	}
 
 	/**
-	 * 解析天氣Json，保存具体信息到Weather实体类并返回
+	 * 解析天氣Json，保存具体信息到实体类
 	 * 
 	 * @param weatherJson
 	 * @return
 	 */
-	public Weather parseWeatherJson(String weatherJson) {
-		Weather weather = new Weather();
+	public void parseWeatherJson(String weatherJson) {
+		weather = new Weather();//基础天气
 		try {
 			JSONObject jsonObj = new JSONObject(weatherJson);
 			if (jsonObj.has("HeWeather data service 3.0")) {
@@ -352,6 +370,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 				JSONObject info = heWeather.getJSONObject(0);
 				if (info.has("status")) {
 					if (info.getString("status").equals("ok")) {
+						//---基础天气---
 						JSONObject basic = info.getJSONObject("basic");
 						// 城市
 						weather.setCity(basic.getString("city"));
@@ -370,13 +389,26 @@ public class MainActivity extends Activity implements AMapLocationListener {
 						weather.setNowTemp(now.getString("tmp"));
 						// 当前天气描述
 						weather.setNowCondTxt(nowCond.getString("txt"));
+						
+						//---每日天气---
+						for(int i = 0;i<daily.length();i++){
+							DailyForecast dailyForecast = new DailyForecast();//每日天气
+							JSONObject day = daily.getJSONObject(i);
+							dailyForecast.setDate(Utils.splitDate(day.getString("date")));
+							dailyForecast.setWeek(Utils.dayForWeek(day.getString("date")));
+							dailyForecast.setCond(day.getJSONObject("cond").getString("code_d"));
+							dailyForecast.setTmpMax(day.getJSONObject("tmp").getString("max"));
+							dailyForecast.setTmpMin(day.getJSONObject("tmp").getString("min"));
+							dailyForecastList.add(dailyForecast);
+						}
 					}
 				}
 			}
 		} catch (JSONException e) {
 			e.printStackTrace();
+		} catch (ParseException e) {
+			e.printStackTrace();
 		}
-		return weather;
 	}
 
 	public String WriteToString(List<CityDetail> cityDetails) {
