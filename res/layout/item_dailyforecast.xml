@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" >
+    android:layout_height="wrap_content"
+    android:background="@color/blue" >
 
     <LinearLayout
         android:id="@+id/dailyforecast_info"
@@ -16,7 +17,7 @@
             android:id="@+id/dailyforecast_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#fff"
+            android:textColor="@color/white"
             android:textSize="14sp" />
 
         <TextView
@@ -24,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:textColor="#fff"
+            android:textColor="@color/white"
             android:textSize="14sp" />
 
         <ImageView
@@ -33,13 +34,5 @@
             android:layout_height="30dp"
             android:layout_marginTop="20dp" />
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/dailyforecast_line"
-        android:layout_width="1dp"
-        android:layout_height="match_parent"
-        android:layout_alignBaseline="@+id/dailyforecast_info"
-        android:layout_toRightOf="@+id/dailyforecast_info"
-        android:background="#fff" />
 
 </RelativeLayout>

@@ -111,6 +111,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		locationIV = (ImageView) findViewById(R.id.location);
 		moreIV = (ImageView) findViewById(R.id.more);
 		
+		
 		dailyForecastList = new ArrayList<DailyForecast>();
 		
 		//初始化一周天气GridView

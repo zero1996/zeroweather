@@ -3,12 +3,10 @@
     android:id="@+id/weather"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#56abe4"
-    >
+    android:orientation="vertical" >
 
-    <include layout="@layout/layout_top"
-         />
+    <include layout="@layout/layout_top" />
 
     <ScrollView
         android:id="@+id/scroll_view"
@@ -21,16 +19,17 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" >
 
-            <include layout="@layout/now_weather"
-                 />
-		
+            <include layout="@layout/now_weather" />
+
             <com.zeroweather.app.view.DailyForecastGridView
                 android:id="@+id/daily_forecast_grid_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:numColumns="7"
                 android:layout_marginTop="100dp"
-                >
+                android:background="@color/gray_white"
+                android:horizontalSpacing="1px"
+                android:numColumns="7"
+                android:stretchMode="columnWidth" >
             </com.zeroweather.app.view.DailyForecastGridView>
         </LinearLayout>
     </ScrollView>
