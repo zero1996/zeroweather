@@ -33,6 +33,34 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginTop="20dp" />
+
+        <TextView
+            android:id="@+id/dailyforecast_tmp_max"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/dailyforecast_tmp_max_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginTop="5dp"
+            android:src="@drawable/dot" />
+
+        <ImageView
+            android:id="@+id/dailyforecast_tmp_min_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:src="@drawable/dot" />
+
+        <TextView
+            android:id="@+id/dailyforecast_tmp_min"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
     </LinearLayout>
 
 </RelativeLayout>

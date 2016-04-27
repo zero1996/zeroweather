@@ -5,34 +5,44 @@ import java.util.List;
 import com.zeroweather.app.R;
 import com.zeroweather.app.model.DailyForecast;
 
+import android.app.ActionBar.LayoutParams;
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class DailyForecastAdapter extends ArrayAdapter<DailyForecast> {
 	private Context context;
 	private int resId;
 	private List<DailyForecast> datas;
+	private int tmpMax;
+	private int tmpMin;
+	private int tmpDiff;
 
 	public DailyForecastAdapter(Context context, int resource,
-			 List<DailyForecast> objects) {
-		super(context, resource, objects);
+			List<DailyForecast> dataList) {
+		super(context, resource, dataList);
 		this.context = context;
 		this.resId  = resource;
-		this.datas = objects;
+		this.datas = dataList;
+		initTmpData();
+		//		Toast.makeText(context, "Max:"+tmpMax+"Min:"+tmpMin+"Diff:"+tmpDiff, Toast.LENGTH_SHORT).show();
 	}
-	
-	
+
+
 	@Override
 	public DailyForecast getItem(int position) {
 		return datas.get(position);
 	}
-	
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ViewHolder holder = null;
@@ -42,12 +52,17 @@ public class DailyForecastAdapter extends ArrayAdapter<DailyForecast> {
 			holder.dateTV = (TextView) convertView.findViewById(R.id.dailyforecast_date);
 			holder.weekTV = (TextView) convertView.findViewById(R.id.dailyforecast_week);
 			holder.condIV = (ImageView) convertView.findViewById(R.id.dailyforecast_cond);
+			holder.tmpMaxTV = (TextView) convertView.findViewById(R.id.dailyforecast_tmp_max);
+			holder.tmpMinTV = (TextView) convertView.findViewById(R.id.dailyforecast_tmp_min);
+			holder.tmpMinDotIV = (ImageView) convertView.findViewById(R.id.dailyforecast_tmp_min_dot);
 			convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder) convertView.getTag();
 		}
-		
+
 		DailyForecast data = getItem(position);
+		int max = Integer.valueOf(data.getTmpMax());
+		int min = Integer.valueOf(data.getTmpMin());
 		holder.dateTV.setText(data.getDate());
 		holder.weekTV.setText(data.getWeek());
 		switch (Integer.valueOf(data.getCond())) {
@@ -197,13 +212,54 @@ public class DailyForecastAdapter extends ArrayAdapter<DailyForecast> {
 			holder.condIV.setImageResource(R.drawable.unknown);
 			break;
 		}
+		holder.tmpMaxTV.setText(data.getTmpMax()+"°");
+		holder.tmpMinTV.setText(data.getTmpMin()+"°");
+		LinearLayout.LayoutParams tvParams = (LinearLayout.LayoutParams) holder.tmpMaxTV.getLayoutParams();
+		LinearLayout.LayoutParams ivParams = (LinearLayout.LayoutParams) holder.tmpMinDotIV.getLayoutParams();
+		
+		int tvTopMargin = 50+(tmpMax - max) *300 /tmpDiff;
+		int ivTopMargin = 50+(tmpMax - min) *300 /tmpDiff;
+		
+		tvParams.topMargin = tvTopMargin;
+		ivParams.topMargin = ivTopMargin - tvTopMargin;
+		
 		return convertView;
 	}
-	
+
 	class ViewHolder{
 		TextView dateTV;
 		TextView weekTV;
 		ImageView condIV;
+		TextView tmpMaxTV;
+		TextView tmpMinTV;
+		ImageView tmpMinDotIV;
+	}
+
+	/**
+	 *初始化温度数据
+	 */
+	private void initTmpData() {
+		//		for(DailyForecast d:datas){
+		for(int i= 0;i<datas.size();i++){
+			DailyForecast d = datas.get(i);
+			int max = Integer.valueOf(d.getTmpMax());
+			int min = Integer.valueOf(d.getTmpMin());
+			if(i == 0){
+				tmpMax = max;
+				tmpMin = min;
+			}else{
+				if(max>tmpMax){
+					tmpMax = max;
+					tmpDiff = tmpMax - tmpMin;
+				}
+				if(min<tmpMin){
+					tmpMin = min;
+					tmpDiff = tmpMax - tmpMin;
+				}
+			}
+
+
+		}
 	}
 
 }

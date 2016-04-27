@@ -107,7 +107,10 @@ public class Utils {
 	 */
 	public static String parseDistrictName(String district){
 		String districtName = district;
-		char tag = districtName.charAt(districtName.length()-1);
+		char tag = 0;
+		if(districtName.length() > 0){
+			tag = districtName.charAt(districtName.length()-1);
+		}
 		if("区".equals(tag+"")){
 			districtName = districtName.substring(0, districtName.length() - 1);
 		}

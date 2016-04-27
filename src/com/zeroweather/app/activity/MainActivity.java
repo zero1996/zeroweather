@@ -76,7 +76,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private ImageView moreIV;
 	private DailyForecastGridView dfGridView;//一周天气GridView
 	private DailyForecastAdapter dfApt;//一周天气适配器
-	
+
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -88,7 +88,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
 		initView();
-		
+
 		Message msg = new Message();
 		msg.what = Utils.MSG_LOAD_CITY_DETAIL;
 		mHandler.sendMessage(msg);
@@ -110,15 +110,13 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		weatherLayout = (LinearLayout) findViewById(R.id.weather);
 		locationIV = (ImageView) findViewById(R.id.location);
 		moreIV = (ImageView) findViewById(R.id.more);
-		
-		
+
+
 		dailyForecastList = new ArrayList<DailyForecast>();
-		
+
 		//初始化一周天气GridView
 		dfGridView = (DailyForecastGridView) findViewById(R.id.daily_forecast_grid_view);
-		dfApt = new DailyForecastAdapter(this, R.layout.item_dailyforecast, dailyForecastList);
-		dfGridView.setAdapter(dfApt);
-		
+
 		// 获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0,
 				View.MeasureSpec.UNSPECIFIED);
@@ -134,9 +132,15 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
 				.getLayoutParams();
 		params.topMargin = getScreenHeight() - nowWeatherHeight
-				- topWeatherHeight - padding * 4;
+				- topWeatherHeight
+				;
 
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
+
+		//设置焦点，ScrollView起始位置在顶部
+		nowWeatherLayout.setFocusable(true);
+		nowWeatherLayout.setFocusableInTouchMode(true);
+		nowWeatherLayout.requestFocus();
 	}
 
 	/**
@@ -307,7 +311,10 @@ public class MainActivity extends Activity implements AMapLocationListener {
 				}
 				//刷新一周天气数据
 				if(dailyForecastList != null){
-					dfApt.notifyDataSetChanged();
+					//					dfApt.notifyDataSetChanged();
+					dfApt = null;
+					dfApt = new DailyForecastAdapter(MainActivity.this, R.layout.item_dailyforecast, dailyForecastList);
+					dfGridView.setAdapter(dfApt);
 				}
 			}
 
@@ -351,8 +358,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		// 保存至xml
-		writeToXml(WriteToString(list));
 	}
 
 	/**
@@ -390,7 +395,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 						weather.setNowTemp(now.getString("tmp"));
 						// 当前天气描述
 						weather.setNowCondTxt(nowCond.getString("txt"));
-						
+
 						//---每日天气---
 						for(int i = 0;i<daily.length();i++){
 							DailyForecast dailyForecast = new DailyForecast();//每日天气
@@ -412,66 +417,14 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		}
 	}
 
-	public String WriteToString(List<CityDetail> cityDetails) {
-		XmlSerializer serializer = Xml.newSerializer();
-		StringWriter writer = new StringWriter();
-		try {
-			serializer.setOutput(writer);
-			serializer.startDocument("UTF-8", true);
-
-			for (int i = 0; i < cityDetails.size(); i++) {
-				CityDetail cityDetail = cityDetails.get(i);
-
-				serializer.startTag("", "cityDetail");
-
-				serializer.startTag("", "country");
-				serializer.text(cityDetail.getCountry());
-				serializer.endTag("", "country");
-
-				serializer.startTag("", "province");
-				serializer.text(cityDetail.getProvince());
-				serializer.endTag("", "province");
-
-				serializer.startTag("", "city");
-				serializer.text(cityDetail.getCity());
-				serializer.endTag("", "city");
-
-				serializer.startTag("", "id");
-				serializer.text(cityDetail.getId());
-				serializer.endTag("", "id");
-
-				serializer.endTag("", "cityDetail");
-			}
-			serializer.endDocument();
-
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return writer.toString();
-	}
-
-	private boolean writeToXml(String str) {
-		Log.i("---------------", str);
-		try {
-			OutputStream out = openFileOutput("citys.xml", MODE_PRIVATE);
-			OutputStreamWriter outWriter = new OutputStreamWriter(out);
-			outWriter.write(str);
-			outWriter.close();
-			out.close();
-			return true;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
+	/**
+	 * XML根据城市名解析出城市id
+	 * @param is
+	 * @param cityName
+	 * @param provinceName
+	 * @return
+	 * @throws Exception
+	 */
 	public CityDetail parse(InputStream is, String cityName, String provinceName)
 			throws Exception {
 		CityDetail cityDetail = null;

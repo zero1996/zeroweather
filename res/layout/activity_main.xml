@@ -29,6 +29,7 @@
                 android:background="@color/gray_white"
                 android:horizontalSpacing="1px"
                 android:numColumns="7"
+                android:focusable="false"
                 android:stretchMode="columnWidth" >
             </com.zeroweather.app.view.DailyForecastGridView>
         </LinearLayout>
