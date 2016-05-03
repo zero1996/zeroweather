@@ -36,7 +36,7 @@ import com.zeroweather.app.model.Weather;
 import com.zeroweather.app.util.NetUtil;
 import com.zeroweather.app.util.NetUtil.HttpCallbackListener;
 import com.zeroweather.app.util.Utils;
-import com.zeroweather.app.view.DailyForecastGridView;
+import com.zeroweather.app.view.DailyForecastView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -74,9 +74,8 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private LinearLayout weatherLayout;
 	private ImageView locationIV;
 	private ImageView moreIV;
-	private DailyForecastGridView dfGridView;//一周天气GridView
-	private DailyForecastAdapter dfApt;//一周天气适配器
-
+	
+	private DailyForecastView dfView;
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -114,8 +113,9 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 		dailyForecastList = new ArrayList<DailyForecast>();
 
-		//初始化一周天气GridView
-		dfGridView = (DailyForecastGridView) findViewById(R.id.daily_forecast_grid_view);
+		//初始化一周天气View
+		dfView = (DailyForecastView) findViewById(R.id.daily_forecast);
+		dfView.setDimensions(getScreenWidth(), getScreenHeight());
 
 		// 获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0,
@@ -145,15 +145,25 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 	/**
 	 * 获取屏幕高度
-	 * 
 	 * @return 屏幕高度
 	 */
 	private int getScreenHeight() {
-		WindowManager wm = (WindowManager) this
+		WindowManager wm = (WindowManager) MainActivity.this
 				.getSystemService(Context.WINDOW_SERVICE);
 		DisplayMetrics outMetrics = new DisplayMetrics();
 		wm.getDefaultDisplay().getMetrics(outMetrics);
 		return outMetrics.heightPixels;
+	}
+	/**
+	 * 获取屏幕宽度
+	 * @return 屏幕宽度
+	 */
+	private int getScreenWidth() {
+		WindowManager wm = (WindowManager) MainActivity.this
+				.getSystemService(Context.WINDOW_SERVICE);
+		DisplayMetrics outMetrics = new DisplayMetrics();
+		wm.getDefaultDisplay().getMetrics(outMetrics);
+		return outMetrics.widthPixels;
 	}
 
 	/**
@@ -311,10 +321,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 				}
 				//刷新一周天气数据
 				if(dailyForecastList != null){
-					//					dfApt.notifyDataSetChanged();
-					dfApt = null;
-					dfApt = new DailyForecastAdapter(MainActivity.this, R.layout.item_dailyforecast, dailyForecastList);
-					dfGridView.setAdapter(dfApt);
+					dfView.setData(dailyForecastList);
 				}
 			}
 
