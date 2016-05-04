@@ -115,32 +115,32 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 		//初始化一周天气View
 		dfView = (DailyForecastView) findViewById(R.id.daily_forecast);
-		dfView.setDimensions(getScreenWidth(), getScreenHeight());
+		dfView.setDimensions(getScreenWidth(), getScreenHeight()/2);
 
-		// 获取控件高度
-		int w = View.MeasureSpec.makeMeasureSpec(0,
-				View.MeasureSpec.UNSPECIFIED);
-		int h = View.MeasureSpec.makeMeasureSpec(0,
-				View.MeasureSpec.UNSPECIFIED);
-		nowWeatherLayout.measure(w, h);
-		topWeatherLayout.measure(w, h);
-		weatherLayout.measure(w, h);
-		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
-		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
-		int padding = weatherLayout.getPaddingTop();
-		// 设置margin
-		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
-				.getLayoutParams();
-		params.topMargin = getScreenHeight() - nowWeatherHeight
-				- topWeatherHeight
-				;
+//		// 获取控件高度
+//		int w = View.MeasureSpec.makeMeasureSpec(0,
+//				View.MeasureSpec.UNSPECIFIED);
+//		int h = View.MeasureSpec.makeMeasureSpec(0,
+//				View.MeasureSpec.UNSPECIFIED);
+//		nowWeatherLayout.measure(w, h);
+//		topWeatherLayout.measure(w, h);
+//		weatherLayout.measure(w, h);
+//		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
+//		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
+//		int padding = weatherLayout.getPaddingTop();
+//		// 设置margin
+//		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
+//				.getLayoutParams();
+//		params.topMargin = getScreenHeight() - nowWeatherHeight
+//				- topWeatherHeight
+//				;
 
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
 
-		//设置焦点，ScrollView起始位置在顶部
-		nowWeatherLayout.setFocusable(true);
-		nowWeatherLayout.setFocusableInTouchMode(true);
-		nowWeatherLayout.requestFocus();
+//		//设置焦点，ScrollView起始位置在顶部
+//		nowWeatherLayout.setFocusable(true);
+//		nowWeatherLayout.setFocusableInTouchMode(true);
+//		nowWeatherLayout.requestFocus();
 	}
 
 	/**
