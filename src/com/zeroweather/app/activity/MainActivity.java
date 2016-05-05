@@ -29,9 +29,11 @@ import com.baidu.apistore.sdk.network.Parameters;
 import com.zeroweather.app.R;
 import com.zeroweather.app.application.App;
 import com.zeroweather.app.apt.DailyForecastAdapter;
+import com.zeroweather.app.apt.GridAdapter;
 import com.zeroweather.app.db.ZeroWeatherDB;
 import com.zeroweather.app.model.CityDetail;
 import com.zeroweather.app.model.DailyForecast;
+import com.zeroweather.app.model.Grid;
 import com.zeroweather.app.model.Weather;
 import com.zeroweather.app.util.NetUtil;
 import com.zeroweather.app.util.NetUtil.HttpCallbackListener;
@@ -50,6 +52,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ArrayAdapter;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
@@ -76,6 +79,9 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private ImageView moreIV;
 	
 	private DailyForecastView dfView;
+	private GridView nowGV;
+	
+	private GridAdapter nowGVApt;
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -116,31 +122,42 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		//初始化一周天气View
 		dfView = (DailyForecastView) findViewById(R.id.daily_forecast);
 		dfView.setDimensions(getScreenWidth(), getScreenHeight()/2);
-
-//		// 获取控件高度
-//		int w = View.MeasureSpec.makeMeasureSpec(0,
-//				View.MeasureSpec.UNSPECIFIED);
-//		int h = View.MeasureSpec.makeMeasureSpec(0,
-//				View.MeasureSpec.UNSPECIFIED);
-//		nowWeatherLayout.measure(w, h);
-//		topWeatherLayout.measure(w, h);
-//		weatherLayout.measure(w, h);
-//		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
-//		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
+		
+		//初始化GridView
+		nowGV = (GridView) findViewById(R.id.grid_view_now);
+		
+		// 获取控件高度
+		int w = View.MeasureSpec.makeMeasureSpec(0,
+				View.MeasureSpec.UNSPECIFIED);
+		int h = View.MeasureSpec.makeMeasureSpec(0,
+				View.MeasureSpec.UNSPECIFIED);
+		nowWeatherLayout.measure(w, h);
+		topWeatherLayout.measure(w, h);
+		weatherLayout.measure(w, h);
+		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
+		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
 //		int padding = weatherLayout.getPaddingTop();
-//		// 设置margin
-//		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
-//				.getLayoutParams();
-//		params.topMargin = getScreenHeight() - nowWeatherHeight
-//				- topWeatherHeight
-//				;
+		
+		
+		LinearLayout.LayoutParams topParams = (LayoutParams) topWeatherLayout
+				.getLayoutParams();
+		int topSpace = topParams.topMargin + topParams.bottomMargin;
+				;
+		
+		// 设置margin
+		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
+				.getLayoutParams();
+		params.topMargin = getScreenHeight() - nowWeatherHeight
+				- topWeatherHeight 
+				- topSpace*2
+				;
 
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
 
-//		//设置焦点，ScrollView起始位置在顶部
-//		nowWeatherLayout.setFocusable(true);
-//		nowWeatherLayout.setFocusableInTouchMode(true);
-//		nowWeatherLayout.requestFocus();
+		//设置焦点，ScrollView起始位置在顶部
+		nowWeatherLayout.setFocusable(true);
+		nowWeatherLayout.setFocusableInTouchMode(true);
+		nowWeatherLayout.requestFocus();
 	}
 
 	/**
@@ -317,7 +334,32 @@ public class MainActivity extends Activity implements AMapLocationListener {
 					nowCondTxtTV.setText(weather.getNowCondTxt());
 					todayTmpScope.setText(weather.getTodayTempMax()
 							+ "°/" + weather.getTodayTempMin() + "℃");
-
+					/*
+					 * 刷新GridView
+					 */
+					List<Grid> list = new ArrayList<Grid>();
+					for(int i=0;i<3;i++){
+						Grid grid = new Grid();
+						if(i == 0){
+							grid.setImgId(R.drawable.wind);
+							grid.setTitle(weather.getWindDir());
+							grid.setContent(weather.getWindSc()+"级");
+						}
+						if(i == 1){
+							grid.setImgId(R.drawable.uv);
+							grid.setTitle("紫外线");
+							grid.setContent(weather.getUv());
+						}
+						if(i == 2){
+							grid.setImgId(R.drawable.hum);
+							grid.setTitle("湿度");
+							grid.setContent(weather.getHum()+"%");
+						}
+						list.add(grid);
+					}
+					
+					nowGVApt = new GridAdapter(MainActivity.this, R.layout.item_grid, list);
+					nowGV.setAdapter(nowGVApt);
 				}
 				//刷新一周天气数据
 				if(dailyForecastList != null){
@@ -402,7 +444,33 @@ public class MainActivity extends Activity implements AMapLocationListener {
 						weather.setNowTemp(now.getString("tmp"));
 						// 当前天气描述
 						weather.setNowCondTxt(nowCond.getString("txt"));
-
+						//风
+						JSONObject wind = now.getJSONObject("wind");
+						weather.setWindDir(wind.getString("dir"));//风向
+						weather.setWindSc(wind.getString("sc"));//风力
+						//紫外线
+						JSONObject suggestion = info.getJSONObject("suggestion");//生活建议
+						JSONObject uv = suggestion.getJSONObject("uv");
+						weather.setUv(uv.getString("brf"));
+						//湿度 
+						weather.setHum(now.getString("hum"));
+						//运动指数
+						JSONObject sport = suggestion.getJSONObject("sport");
+						weather.setSportBrf(sport.getString("brf"));
+						weather.setSportTxt(sport.getString("txt"));
+						//洗车指数
+						JSONObject cw = suggestion.getJSONObject("cw");
+						weather.setSportBrf(cw.getString("brf"));
+						weather.setSportTxt(cw.getString("txt"));
+						//穿衣建议
+						JSONObject drsg = suggestion.getJSONObject("drsg");
+						weather.setDrsgBrf(drsg.getString("brf"));
+						weather.setDrsgTxt(drsg.getString("txt"));
+						//空气
+						JSONObject aqi = info.getJSONObject("aqi").getJSONObject("city");
+						weather.setAqi(aqi.getString("aqi"));//空气指数
+						weather.setQlty(aqi.getString("qlty"));//空气质量
+						
 						//---每日天气---
 						for(int i = 0;i<daily.length();i++){
 							DailyForecast dailyForecast = new DailyForecast();//每日天气

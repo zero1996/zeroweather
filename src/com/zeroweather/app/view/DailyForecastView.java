@@ -59,7 +59,7 @@ public class DailyForecastView extends View {
 
 		mLinePaint = new Paint();
 		mLinePaint.setAntiAlias(true);
-		mLinePaint.setColor(Color.WHITE);
+		mLinePaint.setColor(Color.parseColor("#E0E0E0"));
 		mLinePaint.setStrokeWidth(4);
 		mLinePaint.setStyle(Style.FILL);
 	}
@@ -85,6 +85,12 @@ public class DailyForecastView extends View {
 		x[6] = w*13/14;
 		
 		this.h = height;
+		mTmpSpace = h/2/50;
+	}
+	
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+		setMeasuredDimension(w, h);
 	}
 
 	public void setData(List<DailyForecast> datas){
@@ -126,7 +132,7 @@ public class DailyForecastView extends View {
 			 * 画高温点
 			 */
 			int max = Integer.valueOf(d.getTmpMax());//高温
-			int tmpMaxSpace = (mTmpMax - max)*mTmpSpace;//高温距基线的距离
+			int tmpMaxSpace = (mTmpMax - max)*mTmpSpace*2;//高温距基线的距离
 			int tmpMaxY = baseH + tmpMaxSpace; //高温点Y坐标
 			canvas.drawCircle(x[i], tmpMaxY, mRadius, mPointPaint);//画高温点
 			/*
@@ -155,22 +161,22 @@ public class DailyForecastView extends View {
 			/*
 			 * 画天气状态图标
 			 */
-			int fontBitmapY = baseH - mTmpSpace*12;
+			int fontBitmapY = baseH - mTmpSpace*25;
 			canvas.drawBitmap(mCondPics[i], x[i]-mCondPics[i].getWidth()/2, fontBitmapY, null);
 			/*
 			 * 画日期
 			 */
-			int weekY = fontBitmapY - mTmpSpace*4;
+			int weekY = fontBitmapY - mTmpSpace*10;
 			canvas.drawText(d.getWeek(), x[i], weekY, mTextPaint);
-			int dateY = weekY - mTmpSpace*3;
+			int dateY = weekY - mTmpSpace*7;
 			canvas.drawText(d.getDate(), x[i], dateY, mTextPaint);
 			/*
 			 * 画低温点
 			 */
 			int min = Integer.valueOf(d.getTmpMin());
-			int tmpMinY = tmpMaxY + (max-min)*mTmpSpace;
+			int tmpMinY = tmpMaxY + (max-min)*mTmpSpace*2;
 			canvas.drawCircle(x[i], tmpMinY, mRadius, mPointPaint);
-			/*
+			/*s
 			 *画低温折线
 			 */
 			if(i != 0){
@@ -193,7 +199,8 @@ public class DailyForecastView extends View {
 			int tmpMinTextY = (int) (tmpMinY + tmpTextSpace);
 			canvas.drawText(d.getTmpMin()+"°", x[i], tmpMinTextY, mTextPaint);
 			
-//			canvas.drawLine(x[i]+w*1/14, 0, x[i]+w*1/14, this.getHeight(), mLinePaint);
+			if(i != 6)
+			canvas.drawLine(x[i]+w*1/14, 0, x[i]+w*1/14, baseH+mTmpSpace*50, mLinePaint);
 		}
 	}
 
