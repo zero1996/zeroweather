@@ -4,6 +4,7 @@
 package com.zeroweather.app.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.text.ParseException;
@@ -14,6 +15,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlSerializer;
 
 import android.util.Xml;
@@ -161,7 +163,86 @@ public class Utils {
 	
 	public static String splitDate(String time){
 		String [] date = time.split("-");
-		return date[1]+"/"+date[2];
+		String a = date[1];
+		String b = date[2];
+		if(a.indexOf("0") == 0){
+			a = a.substring(1, 2);
+		}
+		if(b.indexOf("0") == 0){
+			b = b.substring(1, 2);
+		}
+		
+		return a+"/"+b;
+	}
+	
+	/**
+	 * XML根据城市名解析出城市id
+	 * @param is
+	 * @param cityName 城市名
+	 * @param provinceName 省份名
+	 * @return
+	 * @throws Exception
+	 */
+	public static CityDetail parse(InputStream is, String cityName, String provinceName)
+			throws Exception {
+		CityDetail cityDetail = null;
+		XmlPullParser xpp = Xml.newPullParser();
+		// 设置输入流 并指明编码方式
+		xpp.setInput(is, "UTF-8");
+		// 产生第一个事件
+		int eventType = xpp.getEventType();
+
+		boolean flag = false;
+
+		while (eventType != XmlPullParser.END_DOCUMENT) {
+			switch (eventType) {
+			// 判断当前事件是否为文档开始事件
+			case XmlPullParser.START_DOCUMENT:
+
+				break;
+				// 判断当前事件是否为标签元素开始事件
+			case XmlPullParser.START_TAG:
+				if (xpp.getName().equals("cityDetail")) {
+
+				} else if (xpp.getName().equals("city")) {
+					eventType = xpp.next();// 让解析器指向city属性的值
+					if (xpp.getText().trim().equals(cityName)) {
+						cityDetail = new CityDetail();
+						flag = true;
+						cityDetail.setCity(xpp.getText());
+					}
+				} else if (xpp.getName().equals("country")) {
+					eventType = xpp.next();// 让解析器指向country属性的值
+					if (flag) {
+						cityDetail.setCountry(xpp.getText().trim());
+					}
+				} else if (xpp.getName().equals("province")) {
+					eventType = xpp.next();// 让解析器指向province属性的值
+					if (xpp.getText().trim().equals(provinceName)) {
+						if (flag) {
+							cityDetail.setProvince(xpp.getText().trim());
+						}
+					}
+				} else if (xpp.getName().equals("id")) {
+					eventType = xpp.next();// 让解析器指向id属性的值
+					if (flag) {
+						cityDetail.setId(xpp.getText().trim());
+						return cityDetail;
+					}
+				}
+				break;
+
+				// 判断当前事件是否为标签结束事件
+			case XmlPullParser.END_TAG:
+				if (xpp.getName().equals("cityDetail")) {
+					cityDetail = null;
+				}
+				break;
+			}
+			// 进入下一个元素并触发相应事件
+			eventType = xpp.next();
+		}
+		return cityDetail;
 	}
 	
 	

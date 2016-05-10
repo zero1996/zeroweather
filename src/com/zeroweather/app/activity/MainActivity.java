@@ -57,16 +57,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity implements AMapLocationListener {
+public class MainActivity extends BaseActivity implements AMapLocationListener {
 	private ZeroWeatherDB zeroWeatherDB;
 	private App mApp;
-	private List<DailyForecast> dailyForecastList;//每日天气集合
-	private Weather weather;//基础天气实体类
+	private List<DailyForecast> dailyForecastList;// 每日天气集合
+	private Weather weather;// 基础天气实体类
 	private TextView locatiionCityTV;// 显示城市
 	private TextView dateTV;// 显示日期
 	private TextView nowTmpTV;// 显示当前温度
@@ -77,11 +78,16 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	private LinearLayout weatherLayout;
 	private ImageView locationIV;
 	private ImageView moreIV;
-	
+
 	private DailyForecastView dfView;
 	private GridView nowGV;
-	
+	private GridView suggestGV;
+
 	private GridAdapter nowGVApt;
+	private GridAdapter suggestGVApt;
+
+	private TextView aqiQltyTV;// 空气质量
+	private ProgressBar aqiPB;// 空气指数
 
 	private AMapLocationClient locationClient = null;
 	private AMapLocationClientOption locationOption = null;
@@ -93,11 +99,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
 		initView();
-
-		Message msg = new Message();
-		msg.what = Utils.MSG_LOAD_CITY_DETAIL;
-		mHandler.sendMessage(msg);
-
 	}
 
 	/**
@@ -116,16 +117,19 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		locationIV = (ImageView) findViewById(R.id.location);
 		moreIV = (ImageView) findViewById(R.id.more);
 
-
 		dailyForecastList = new ArrayList<DailyForecast>();
 
-		//初始化一周天气View
+		// 初始化一周天气View
 		dfView = (DailyForecastView) findViewById(R.id.daily_forecast);
-		dfView.setDimensions(getScreenWidth(), getScreenHeight()/2);
-		
-		//初始化GridView
+		dfView.setDimensions(getScreenWidth(), getScreenHeight() / 2);
+
+		// 初始化GridView
 		nowGV = (GridView) findViewById(R.id.grid_view_now);
-		
+		suggestGV = (GridView) findViewById(R.id.grid_view_suggest);
+
+		aqiQltyTV = (TextView) findViewById(R.id.aqi_qlty);
+		aqiPB = (ProgressBar) findViewById(R.id.aqi_progress);
+
 		// 获取控件高度
 		int w = View.MeasureSpec.makeMeasureSpec(0,
 				View.MeasureSpec.UNSPECIFIED);
@@ -136,25 +140,22 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		weatherLayout.measure(w, h);
 		int nowWeatherHeight = nowWeatherLayout.getMeasuredHeight();
 		int topWeatherHeight = topWeatherLayout.getMeasuredHeight();
-//		int padding = weatherLayout.getPaddingTop();
-		
-		
+		// int padding = weatherLayout.getPaddingTop();
+
 		LinearLayout.LayoutParams topParams = (LayoutParams) topWeatherLayout
 				.getLayoutParams();
 		int topSpace = topParams.topMargin + topParams.bottomMargin;
-				;
-		
+		;
+
 		// 设置margin
 		LinearLayout.LayoutParams params = (LayoutParams) nowWeatherLayout
 				.getLayoutParams();
 		params.topMargin = getScreenHeight() - nowWeatherHeight
-				- topWeatherHeight 
-				- topSpace*2
-				;
+				- topWeatherHeight - topSpace * 2;
 
 		zeroWeatherDB = ZeroWeatherDB.getInstance(this);
 
-		//设置焦点，ScrollView起始位置在顶部
+		// 设置焦点，ScrollView起始位置在顶部
 		nowWeatherLayout.setFocusable(true);
 		nowWeatherLayout.setFocusableInTouchMode(true);
 		nowWeatherLayout.requestFocus();
@@ -162,6 +163,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 	/**
 	 * 获取屏幕高度
+	 * 
 	 * @return 屏幕高度
 	 */
 	private int getScreenHeight() {
@@ -171,8 +173,10 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		wm.getDefaultDisplay().getMetrics(outMetrics);
 		return outMetrics.heightPixels;
 	}
+
 	/**
 	 * 获取屏幕宽度
+	 * 
 	 * @return 屏幕宽度
 	 */
 	private int getScreenWidth() {
@@ -183,132 +187,6 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		return outMetrics.widthPixels;
 	}
 
-	/**
-	 * 获取可获得天气的城市列表
-	 */
-	private void getCityList() {
-		if (mApp.isFirstEnter()) {
-			NetUtil.sendRequest(GET_ALL_CHINA_CITY, new HttpCallbackListener() {
-				@Override
-				public void onFinish(String response) {
-					parseCitylistJson(response);
-					Message msg = new Message();
-					msg.what = Utils.MSG_LOAD_CITY_DETAIL;
-					mHandler.sendMessage(msg);
-					mApp.setFirstEnter(false);
-				}
-
-				@Override
-				public void onError(Exception e) {
-				}
-			});
-		} else {
-			Message msg = new Message();
-			msg.what = Utils.MSG_LOAD_CITY_DETAIL;
-			mHandler.sendMessage(msg);
-
-		}
-	}
-
-	/**
-	 * 低功耗定位模式
-	 */
-	private void startLocation() {
-		locationClient = new AMapLocationClient(this.getApplicationContext());
-		locationOption = new AMapLocationClientOption();
-		// 设置定位模式为低功耗模式
-		locationOption.setLocationMode(AMapLocationMode.Battery_Saving);
-		// 设置定位监听
-		locationClient.setLocationListener(this);
-		// 设置为不是单次定位
-		locationOption.setOnceLocation(true);
-		// 设置是否需要显示地址信息
-		locationOption.setNeedAddress(true);
-		// 设置定位参数
-		locationClient.setLocationOption(locationOption);
-		// 启动定位
-		locationClient.startLocation();
-		mHandler.sendEmptyMessage(Utils.MSG_LOCATION_START);
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		if (null != locationClient) {
-			/**
-			 * 如果AMapLocationClient是在当前Activity实例化的，
-			 * 在Activity的onDestroy中一定要执行AMapLocationClient的onDestroy
-			 */
-			locationClient.onDestroy();
-			locationClient = null;
-			locationOption = null;
-		}
-	}
-
-	Handler mHandler = new Handler() {
-		public void dispatchMessage(android.os.Message msg) {
-			switch (msg.what) {
-			case Utils.MSG_LOCATION_START:
-				// locatiionCityTV.setText("正在定位...");
-				break;
-				// 定位完成
-			case Utils.MSG_LOCATION_FINISH:
-				AMapLocation loc = (AMapLocation) msg.obj;
-				Map<String, String> result = Utils.getLocationStr(loc);
-				if (!result.toString().equals("{}")) {
-					String district = Utils.parseDistrictName(result
-							.get("district"));
-					String city = Utils.parseCityName(result.get("city"));
-					String province = Utils.parseProvinceName(result
-							.get("province"));
-					// 先通过区域名查询城市代码，查询不到则通过城市名查询。
-					CityDetail cityDetail = null;
-					InputStream is;
-					try {
-						is = MainActivity.this.getAssets().open("citylist.xml");
-						cityDetail = parse(is, district, province);
-						if (cityDetail == null) {
-							is = MainActivity.this.getAssets().open("citylist.xml");
-							cityDetail = parse(is, city, province);
-						}
-						// 获取天气
-						if (cityDetail != null) {
-							getWeather(cityDetail.getId());
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					locationIV.setImageResource(R.drawable.location_on);
-				} else {
-					locationIV.setImageResource(R.drawable.location_off);
-					Toast.makeText(MainActivity.this, "定位失败",
-							Toast.LENGTH_SHORT).show();
-				}
-				break;
-			case Utils.MSG_LOCATION_STOP:
-				// tv.setText("定位停止");
-				break;
-			case Utils.MSG_LOAD_CITY_DETAIL:
-				startLocation();
-				break;
-			default:
-				break;
-			}
-		};
-	};
-
-	// 定位监听
-	@Override
-	public void onLocationChanged(AMapLocation loc) {
-		if (null != loc) {
-			Message msg = mHandler.obtainMessage();
-			msg.obj = loc;
-			msg.what = Utils.MSG_LOCATION_FINISH;
-			mHandler.sendMessage(msg);
-		}
-	}
 
 	/**
 	 * 根据城市代码获取天气
@@ -324,47 +202,10 @@ public class MainActivity extends Activity implements AMapLocationListener {
 			@Override
 			public void onSuccess(int status, String responseString) {
 				Log.i("sdkdemo", "onSuccess");
-				//解析JSON
+				// 解析JSON
 				parseWeatherJson(responseString);
-				//刷新界面基础天气信息
-				if (weather != null) {
-					locatiionCityTV.setText(weather.getCity());
-					dateTV.setText(weather.getDate());
-					nowTmpTV.setText(weather.getNowTemp() + "°");
-					nowCondTxtTV.setText(weather.getNowCondTxt());
-					todayTmpScope.setText(weather.getTodayTempMax()
-							+ "°/" + weather.getTodayTempMin() + "℃");
-					/*
-					 * 刷新GridView
-					 */
-					List<Grid> list = new ArrayList<Grid>();
-					for(int i=0;i<3;i++){
-						Grid grid = new Grid();
-						if(i == 0){
-							grid.setImgId(R.drawable.wind);
-							grid.setTitle(weather.getWindDir());
-							grid.setContent(weather.getWindSc()+"级");
-						}
-						if(i == 1){
-							grid.setImgId(R.drawable.uv);
-							grid.setTitle("紫外线");
-							grid.setContent(weather.getUv());
-						}
-						if(i == 2){
-							grid.setImgId(R.drawable.hum);
-							grid.setTitle("湿度");
-							grid.setContent(weather.getHum()+"%");
-						}
-						list.add(grid);
-					}
-					
-					nowGVApt = new GridAdapter(MainActivity.this, R.layout.item_grid, list);
-					nowGV.setAdapter(nowGVApt);
-				}
-				//刷新一周天气数据
-				if(dailyForecastList != null){
-					dfView.setData(dailyForecastList);
-				}
+				// 刷新界面基础天气信息
+				refreshView();
 			}
 
 			@Override
@@ -384,28 +225,85 @@ public class MainActivity extends Activity implements AMapLocationListener {
 
 	}
 
+
 	/**
-	 * 解析城市列表json,并保存至数据库
+	 * 刷新界面
 	 */
-	public void parseCitylistJson(String response) {
-		List<CityDetail> list = new ArrayList<CityDetail>();
-		try {
-			JSONObject jsonObj = new JSONObject(response);
-			if (jsonObj.has("city_info")) {
-				JSONArray jsonAray = jsonObj.getJSONArray("city_info");
-				for (int i = 0; i < jsonAray.length(); i++) {
-					JSONObject detail = jsonAray.getJSONObject(i);
-					CityDetail cityDetail = new CityDetail();
-					cityDetail.setCountry(detail.getString("cnty"));
-					cityDetail.setProvince(detail.getString("prov"));
-					cityDetail.setCity(detail.getString("city"));
-					cityDetail.setId(detail.getString("id"));
-					zeroWeatherDB.saveCityDetail(cityDetail);
-					list.add(cityDetail);
-				}
+	private void refreshView() {
+		if (weather != null) {
+			if (Integer.valueOf(weather.getNowCondCode()) > 213
+					&& Integer.valueOf(weather.getNowCondCode()) < 407) {
+				weatherLayout
+				.setBackgroundResource(R.color.deep_blue);
+			} else {
+				weatherLayout
+				.setBackgroundResource(R.color.blue);
 			}
-		} catch (JSONException e) {
-			e.printStackTrace();
+
+			locatiionCityTV.setText(weather.getCity());
+			try {
+				dateTV.setText(Utils.splitDate(weather.getDate())+"  "+Utils.dayForWeek(weather.getDate()));
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			nowTmpTV.setText(weather.getNowTemp() + "°");
+			nowCondTxtTV.setText(weather.getNowCondTxt());
+			todayTmpScope.setText(weather.getTodayTempMax()
+					+ "°/" + weather.getTodayTempMin() + "℃");
+
+			aqiQltyTV.setText(weather.getQlty());
+			aqiPB.setSecondaryProgress(Integer.valueOf(weather
+					.getAqi()) / 3);
+			/*
+			 * 刷新GridView
+			 */
+			List<Grid> list1 = new ArrayList<Grid>();
+			List<Grid> list2 = new ArrayList<Grid>();
+			for (int i = 0; i < 3; i++) {
+				Grid grid1 = new Grid();
+				Grid grid2 = new Grid();
+				if (i == 0) {
+					grid1.setImgId(R.drawable.wind);
+					grid1.setTitle(weather.getWindDir());
+					grid1.setContent(weather.getWindSc() + "级");
+
+					grid2.setImgId(R.drawable.sport);
+					grid2.setTitle("运动指数");
+					grid2.setContent(weather.getSportBrf());
+				}
+				if (i == 1) {
+					grid1.setImgId(R.drawable.uv);
+					grid1.setTitle("紫外线");
+					grid1.setContent(weather.getUv());
+
+					grid2.setImgId(R.drawable.cw);
+					grid2.setTitle("洗车指数");
+					grid2.setContent(weather.getCwBrf());
+				}
+				if (i == 2) {
+					grid1.setImgId(R.drawable.hum);
+					grid1.setTitle("湿度");
+					grid1.setContent(weather.getHum() + "%");
+
+					grid2.setImgId(R.drawable.drsg);
+					grid2.setTitle("穿衣建议");
+					grid2.setContent(weather.getDrsgBrf());
+				}
+				list1.add(grid1);
+				list2.add(grid2);
+			}
+
+			nowGVApt = new GridAdapter(MainActivity.this,
+					R.layout.item_grid, list1);
+			nowGV.setAdapter(nowGVApt);
+
+			suggestGVApt = new GridAdapter(MainActivity.this,
+					R.layout.item_grid, list2);
+			suggestGV.setAdapter(suggestGVApt);
+		}
+		// 刷新一周天气数据
+		if (dailyForecastList != null) {
+			dfView.setData(dailyForecastList);
 		}
 	}
 
@@ -416,7 +314,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 	 * @return
 	 */
 	public void parseWeatherJson(String weatherJson) {
-		weather = new Weather();//基础天气
+		weather = new Weather();// 基础天气
 		try {
 			JSONObject jsonObj = new JSONObject(weatherJson);
 			if (jsonObj.has("HeWeather data service 3.0")) {
@@ -425,7 +323,7 @@ public class MainActivity extends Activity implements AMapLocationListener {
 				JSONObject info = heWeather.getJSONObject(0);
 				if (info.has("status")) {
 					if (info.getString("status").equals("ok")) {
-						//---基础天气---
+						// ---基础天气---
 						JSONObject basic = info.getJSONObject("basic");
 						// 城市
 						weather.setCity(basic.getString("city"));
@@ -444,42 +342,56 @@ public class MainActivity extends Activity implements AMapLocationListener {
 						weather.setNowTemp(now.getString("tmp"));
 						// 当前天气描述
 						weather.setNowCondTxt(nowCond.getString("txt"));
-						//风
+						// 风
 						JSONObject wind = now.getJSONObject("wind");
-						weather.setWindDir(wind.getString("dir"));//风向
-						weather.setWindSc(wind.getString("sc"));//风力
-						//紫外线
-						JSONObject suggestion = info.getJSONObject("suggestion");//生活建议
+						weather.setWindDir(wind.getString("dir"));// 风向
+						weather.setWindSc(wind.getString("sc"));// 风力
+						// 紫外线
+						JSONObject suggestion = info
+								.getJSONObject("suggestion");// 生活建议
 						JSONObject uv = suggestion.getJSONObject("uv");
 						weather.setUv(uv.getString("brf"));
-						//湿度 
+						// 湿度
 						weather.setHum(now.getString("hum"));
-						//运动指数
+						// 运动指数
 						JSONObject sport = suggestion.getJSONObject("sport");
 						weather.setSportBrf(sport.getString("brf"));
 						weather.setSportTxt(sport.getString("txt"));
-						//洗车指数
+						// 洗车指数
 						JSONObject cw = suggestion.getJSONObject("cw");
-						weather.setSportBrf(cw.getString("brf"));
-						weather.setSportTxt(cw.getString("txt"));
-						//穿衣建议
+						weather.setCwBrf(cw.getString("brf"));
+						weather.setCwTxt(cw.getString("txt"));
+						// 穿衣建议
 						JSONObject drsg = suggestion.getJSONObject("drsg");
 						weather.setDrsgBrf(drsg.getString("brf"));
 						weather.setDrsgTxt(drsg.getString("txt"));
-						//空气
-						JSONObject aqi = info.getJSONObject("aqi").getJSONObject("city");
-						weather.setAqi(aqi.getString("aqi"));//空气指数
-						weather.setQlty(aqi.getString("qlty"));//空气质量
-						
-						//---每日天气---
-						for(int i = 0;i<daily.length();i++){
-							DailyForecast dailyForecast = new DailyForecast();//每日天气
+						// 空气
+						JSONObject aqi = info.getJSONObject("aqi")
+								.getJSONObject("city");
+						weather.setAqi(aqi.getString("aqi"));// 空气指数
+						weather.setQlty(aqi.getString("qlty"));// 空气质量
+						// 白天天气代码
+						weather.setNowCondCode(nowCond.getString("code"));
+						// 日出日落时间
+						weather.setSr(today.getJSONObject("astro").getString(
+								"sr"));
+						weather.setSs(today.getJSONObject("astro").getString(
+								"ss"));
+
+						// ---每日天气---
+						for (int i = 0; i < daily.length(); i++) {
+							DailyForecast dailyForecast = new DailyForecast();// 每日天气
 							JSONObject day = daily.getJSONObject(i);
-							dailyForecast.setDate(Utils.splitDate(day.getString("date")));
-							dailyForecast.setWeek(Utils.dayForWeek(day.getString("date")));
-							dailyForecast.setCond(day.getJSONObject("cond").getString("code_d"));
-							dailyForecast.setTmpMax(day.getJSONObject("tmp").getString("max"));
-							dailyForecast.setTmpMin(day.getJSONObject("tmp").getString("min"));
+							dailyForecast.setDate(Utils.splitDate(day
+									.getString("date")));
+							dailyForecast.setWeek(Utils.dayForWeek(day
+									.getString("date")));
+							dailyForecast.setCond(day.getJSONObject("cond")
+									.getString("code_d"));
+							dailyForecast.setTmpMax(day.getJSONObject("tmp")
+									.getString("max"));
+							dailyForecast.setTmpMin(day.getJSONObject("tmp")
+									.getString("min"));
 							dailyForecastList.add(dailyForecast);
 						}
 					}
@@ -492,74 +404,52 @@ public class MainActivity extends Activity implements AMapLocationListener {
 		}
 	}
 
+
+
+	@Override
+	public void updateViewOnLocationStart() {
+
+	}
+
 	/**
-	 * XML根据城市名解析出城市id
-	 * @param is
-	 * @param cityName
-	 * @param provinceName
-	 * @return
-	 * @throws Exception
+	 * 定位完成时更新界面
 	 */
-	public CityDetail parse(InputStream is, String cityName, String provinceName)
-			throws Exception {
-		CityDetail cityDetail = null;
-		XmlPullParser xpp = Xml.newPullParser();
-		// 设置输入流 并指明编码方式
-		xpp.setInput(is, "UTF-8");
-		// 产生第一个事件
-		int eventType = xpp.getEventType();
-
-		boolean flag = false;
-
-		while (eventType != XmlPullParser.END_DOCUMENT) {
-			switch (eventType) {
-			// 判断当前事件是否为文档开始事件
-			case XmlPullParser.START_DOCUMENT:
-
-				break;
-				// 判断当前事件是否为标签元素开始事件
-			case XmlPullParser.START_TAG:
-				if (xpp.getName().equals("cityDetail")) {
-
-				} else if (xpp.getName().equals("city")) {
-					eventType = xpp.next();// 让解析器指向city属性的值
-					if (xpp.getText().trim().equals(cityName)) {
-						cityDetail = new CityDetail();
-						flag = true;
-						cityDetail.setCity(xpp.getText());
-					}
-				} else if (xpp.getName().equals("country")) {
-					eventType = xpp.next();// 让解析器指向country属性的值
-					if (flag) {
-						cityDetail.setCountry(xpp.getText().trim());
-					}
-				} else if (xpp.getName().equals("province")) {
-					eventType = xpp.next();// 让解析器指向province属性的值
-					if (xpp.getText().trim().equals(provinceName)) {
-						if (flag) {
-							cityDetail.setProvince(xpp.getText().trim());
-						}
-					}
-				} else if (xpp.getName().equals("id")) {
-					eventType = xpp.next();// 让解析器指向id属性的值
-					if (flag) {
-						cityDetail.setId(xpp.getText().trim());
-						return cityDetail;
-					}
+	@Override
+	public void updateViewOnLocationFinish(Message msg) {
+		AMapLocation loc = (AMapLocation) msg.obj;
+		Map<String, String> result = Utils.getLocationStr(loc);
+		if (!result.toString().equals("{}")) {
+			String district = Utils.parseDistrictName(result
+					.get("district"));
+			String city = Utils.parseCityName(result.get("city"));
+			String province = Utils.parseProvinceName(result
+					.get("province"));
+			// 先通过区域名查询城市代码，查询不到则通过城市名查询。
+			CityDetail cityDetail = null;
+			InputStream is;
+			try {
+				is = MainActivity.this.getAssets().open("citylist.xml");
+				cityDetail = Utils.parse(is, district, province);
+				if (cityDetail == null) {
+					is = MainActivity.this.getAssets().open(
+							"citylist.xml");
+					cityDetail = Utils.parse(is, city, province);
 				}
-				break;
-
-				// 判断当前事件是否为标签结束事件
-			case XmlPullParser.END_TAG:
-				if (xpp.getName().equals("cityDetail")) {
-					cityDetail = null;
+				// 获取天气
+				if (cityDetail != null) {
+					getWeather(cityDetail.getId());
 				}
-				break;
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			// 进入下一个元素并触发相应事件
-			eventType = xpp.next();
+			locationIV.setImageResource(R.drawable.location_on);
+		} else {
+			locationIV.setImageResource(R.drawable.location_off);
+			Toast.makeText(MainActivity.this, "定位失败",
+					Toast.LENGTH_SHORT).show();
 		}
-		return cityDetail;
 	}
 
 }

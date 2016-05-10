@@ -1,7 +1,10 @@
 package com.zeroweather.app.view;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import com.zeroweather.app.model.DailyForecast;
@@ -17,6 +20,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.FontMetrics;
 import android.graphics.Paint.Style;
+import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -25,7 +29,8 @@ public class DailyForecastView extends View {
 	private List<DailyForecast> mDatas;//数据源
 	private Paint mTextPaint;//文字 画笔
 	private Paint mPointPaint;//点 画笔 
-	private Paint mLinePaint;//折线 画笔
+	private Paint mLinePaint;//线 画笔
+	private Paint mPathPaint;//路径画笔
 	private int w;//控件宽
 	private int h;//控件高
 	private int x[] = new int[7];
@@ -35,6 +40,8 @@ public class DailyForecastView extends View {
 	private Context mContext;
 	private int mRadius = 8;
 	private boolean isFirstDraw = true;
+	
+	private List<Map<String,Float>> dots;
 
 
 	public DailyForecastView(Context context, AttributeSet attrs,
@@ -42,6 +49,9 @@ public class DailyForecastView extends View {
 		super(context, attrs, defStyleAttr);
 		
 		mContext = context;
+		
+		dots = new LinkedList<Map<String,Float>>();
+		
 		
 		mCondPics = new Bitmap[7];
 		/*
@@ -61,7 +71,14 @@ public class DailyForecastView extends View {
 		mLinePaint.setAntiAlias(true);
 		mLinePaint.setColor(Color.parseColor("#E0E0E0"));
 		mLinePaint.setStrokeWidth(4);
+		mLinePaint.setAlpha(55);
 		mLinePaint.setStyle(Style.FILL);
+		
+		mPathPaint = new Paint();
+		mPathPaint.setAntiAlias(true);
+		mPathPaint.setColor(Color.parseColor("#E0E0E0"));
+		mPathPaint.setAlpha(80);
+		mPathPaint.setStyle(Style.FILL);
 	}
 
 	public DailyForecastView(Context context, AttributeSet attrs) {
@@ -101,7 +118,7 @@ public class DailyForecastView extends View {
 		 */
 		for(int i =0;i<mDatas.size();i++){
 			DailyForecast d = mDatas.get(i);
-			mCondPics [i] = CondPic.getSmallPic(mContext, Integer.valueOf(d.getCond()), w/14*6/7) ;
+			mCondPics [i] = CondPic.getSmallPic(mContext, Integer.valueOf(d.getCond()), w/14*19/20) ;
 			if(i == 0){
 				mTmpMax = Integer.valueOf(d.getTmpMax());
 			}else{
@@ -126,6 +143,10 @@ public class DailyForecastView extends View {
 		int lastMaxY = 0;
 		int lastMinX = 0;
 		int lastMinY = 0;
+		for(int i=0;i<18;i++){
+			dots.add(new HashMap<String,Float>());
+		}
+		
 		for(int i=0;i<mDatas.size();i++){
 			DailyForecast d = mDatas.get(i);
 			/*
@@ -138,16 +159,32 @@ public class DailyForecastView extends View {
 			/*
 			 *画高温折线
 			 */
+			
+			Map m = new HashMap<String,Float>();
+			m.put("x", (float)x[i]);
+			m.put("y", (float)tmpMaxY);
+			dots.set(i+1, m);
+			
 			if(i != 0){
-				canvas.drawLine(lastMaxX, lastMaxY, x[i], tmpMaxY, mLinePaint);
+//				canvas.drawLine(lastMaxX, lastMaxY, x[i], tmpMaxY, mLinePaint);
 			}
 			if(i ==1){
 				int startY = (tmpMaxY-lastMaxY)/2*(-1)+lastMaxY;
-				canvas.drawLine(0, startY, lastMaxX, lastMaxY, mLinePaint);
+//				canvas.drawLine(0, startY, lastMaxX, lastMaxY, mLinePaint);
+				Map dot = new HashMap<String,Float>();
+				dot.put("x", (float)0);
+				dot.put("y", (float)startY);
+				dots.set(0, dot);
+				
 			}
 			if(i==6){
 				int endY = (tmpMaxY-lastMaxY)/2+tmpMaxY;
-				canvas.drawLine(x[i], tmpMaxY,w , endY, mLinePaint);
+//				canvas.drawLine(x[i], tmpMaxY,w , endY, mLinePaint);
+				Map dot = new HashMap<String,Float>();
+				dot.put("x", (float)w);
+				dot.put("y", (float)endY);
+				dots.set(8, dot);
+				
 			}
 			lastMaxX = x[i];
 			lastMaxY = tmpMaxY;
@@ -176,19 +213,35 @@ public class DailyForecastView extends View {
 			int min = Integer.valueOf(d.getTmpMin());
 			int tmpMinY = tmpMaxY + (max-min)*mTmpSpace*2;
 			canvas.drawCircle(x[i], tmpMinY, mRadius, mPointPaint);
-			/*s
+			/*
 			 *画低温折线
 			 */
+			
+			Map ma = new HashMap<String,Float>();
+			ma.put("x", (float)x[i]);
+			ma.put("y", (float)tmpMinY);
+			dots.set(16-i, ma);
+			
 			if(i != 0){
-				canvas.drawLine(lastMinX, lastMinY, x[i], tmpMinY, mLinePaint);
+//				canvas.drawLine(lastMinX, lastMinY, x[i], tmpMinY, mLinePaint);
+				
 			}
 			if(i ==1){
 				int startY = (tmpMinY-lastMinY)/2*(-1)+lastMinY;
-				canvas.drawLine(0, startY, lastMinX, lastMinY, mLinePaint);
+//				canvas.drawLine(0, startY, lastMinX, lastMinY, mLinePaint);
+				Map dot = new HashMap<String,Float>();
+				dot.put("x", (float)0);
+				dot.put("y", (float)startY);
+				dots.set(17, dot);
+				
 			}
 			if(i==6){
 				int endY = (tmpMinY-lastMinY)/2+tmpMinY;
-				canvas.drawLine(x[i], tmpMinY,w , endY, mLinePaint);
+//				canvas.drawLine(x[i], tmpMinY,w , endY, mLinePaint);
+				Map dot = new HashMap<String,Float>();
+				dot.put("x", (float)w);
+				dot.put("y", (float)endY);
+				dots.set(9, dot);
 			}
 			lastMinX = x[i];
 			lastMinY = tmpMinY;
@@ -202,6 +255,17 @@ public class DailyForecastView extends View {
 			if(i != 6)
 			canvas.drawLine(x[i]+w*1/14, 0, x[i]+w*1/14, baseH+mTmpSpace*50, mLinePaint);
 		}
+		Path path = new Path();
+		for(int i = 0;i<dots.size();i++){
+			Map<String,Float> m = dots.get(i);
+			if(i == 0){
+				path.moveTo(m.get("x"),m.get("y"));
+			}else{
+				path.lineTo(m.get("x"),m.get("y"));
+			}
+		}
+		path.close();
+		canvas.drawPath(path, mPathPaint);
 	}
 
 }

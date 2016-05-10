@@ -4,5 +4,7 @@
     <color name="blue">#56abe4</color>
     <color name="white">#ecf0f1</color>
     <color name="gray_white">#dbdbdb</color>
+    <color name="water_blue">#00F5FF</color>
+    <color name="deep_blue">#33475f</color>
     
 </resources>

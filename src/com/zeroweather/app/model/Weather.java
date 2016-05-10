@@ -19,7 +19,28 @@ public class Weather {
 	private String drsgTxt;//穿衣指数,详细描述
 	private String aqi;//空气质量指数
 	private String qlty;//空气质量类别
+	private String sr;//日出时间
+	private String ss;//日落时间
+	private String nowCondCode;//当前天气状况代码
 	
+	public String getNowCondCode() {
+		return nowCondCode;
+	}
+	public void setNowCondCode(String nowCondCode) {
+		this.nowCondCode = nowCondCode;
+	}
+	public String getSr() {
+		return sr;
+	}
+	public void setSr(String sr) {
+		this.sr = sr;
+	}
+	public String getSs() {
+		return ss;
+	}
+	public void setSs(String ss) {
+		this.ss = ss;
+	}
 	public String getWindDir() {
 		return windDir;
 	}

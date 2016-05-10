@@ -4,5 +4,6 @@
     <string name="app_name">零点天气</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_base">BaseActivity</string>
 
 </resources>
