@@ -71,7 +71,7 @@ public class DailyForecastView extends View {
 		mLinePaint.setAntiAlias(true);
 		mLinePaint.setColor(Color.parseColor("#E0E0E0"));
 		mLinePaint.setStrokeWidth(4);
-		mLinePaint.setAlpha(55);
+		mLinePaint.setAlpha(40);
 		mLinePaint.setStyle(Style.FILL);
 		
 		mPathPaint = new Paint();

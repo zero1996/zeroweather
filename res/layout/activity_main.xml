@@ -21,10 +21,17 @@
     <com.zeroweather.app.view.DailyForecastView
         android:id="@+id/daily_forecast"
         android:layout_marginTop="80dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginBottom="40dp"
         android:focusable="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+    
+    <com.zeroweather.app.view.WeatherCircleView 
+        android:id="@+id/weather_circle"
+        android:focusable="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        />
     
     <GridView 
         android:id="@+id/grid_view_now"
@@ -32,6 +39,7 @@
         android:layout_height="wrap_content"
         android:numColumns="3"
         android:layout_margin="20dp"
+        android:focusable="false"
         ></GridView>
     
     <include 

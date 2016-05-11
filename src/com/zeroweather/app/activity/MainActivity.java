@@ -38,6 +38,7 @@ import com.zeroweather.app.model.Weather;
 import com.zeroweather.app.util.NetUtil;
 import com.zeroweather.app.util.NetUtil.HttpCallbackListener;
 import com.zeroweather.app.util.Utils;
+import com.zeroweather.app.view.WeatherCircleView;
 import com.zeroweather.app.view.DailyForecastView;
 
 import android.app.Activity;
@@ -79,7 +80,8 @@ public class MainActivity extends BaseActivity implements AMapLocationListener {
 	private ImageView locationIV;
 	private ImageView moreIV;
 
-	private DailyForecastView dfView;
+	private DailyForecastView dfView;//七日天气自定义视图
+	private WeatherCircleView cwcView;//圆环天气自定义视图
 	private GridView nowGV;
 	private GridView suggestGV;
 
@@ -122,6 +124,10 @@ public class MainActivity extends BaseActivity implements AMapLocationListener {
 		// 初始化一周天气View
 		dfView = (DailyForecastView) findViewById(R.id.daily_forecast);
 		dfView.setDimensions(getScreenWidth(), getScreenHeight() / 2);
+		
+		//初始化圆环天气View
+		cwcView = (WeatherCircleView) findViewById(R.id.weather_circle);
+		cwcView.setDimension(getScreenWidth(), getScreenWidth());
 
 		// 初始化GridView
 		nowGV = (GridView) findViewById(R.id.grid_view_now);
@@ -394,6 +400,9 @@ public class MainActivity extends BaseActivity implements AMapLocationListener {
 									.getString("min"));
 							dailyForecastList.add(dailyForecast);
 						}
+						
+						//---圆环天气---
+						cwcView.setDatas(weather);
 					}
 				}
 			}
